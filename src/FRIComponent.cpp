@@ -34,11 +34,11 @@
 #include <math.h>
 
 #include "FRIComponent.hpp"
+#include <tf_conversions/tf_kdl.h>
 
-namespace lwr_fri_rtt_2_0 {
+namespace lwr_fri {
 
 using namespace RTT;
-using namespace brics_actuator;
 
 FRIComponent::FRIComponent(const string& name) :
 	TaskContext(name, PreOperational){
@@ -63,14 +63,14 @@ FRIComponent::FRIComponent(const string& name) :
 	this->addPort("desCartPos", m_cartPosPort);
 	this->addPort("desAddJntTrq", m_addJntTrqPort);
 	this->addPort("desAddTcpWrench", m_addTcpWrenchPort);
-	this->addPort("desJntImpedance", m_jntImpedancePort);
-	this->addPort("desCartImpedance", m_cartImpedancePort);
+	//this->addPort("desJntImpedance", m_jntImpedancePort);
+	//this->addPort("desCartImpedance", m_cartImpedancePort);
 
 	this->addProperty("local_port", m_local_port);
-	this->addProperty("control_mode", m_control_mode);
+	this->addProperty("control_mode", m_control_mode).doc("1=JntPos, 3=JntTrq, 4=CartPos, 5=CartForce");
 
-	m_jntPos.positions.resize(LBR_MNJ);
-	m_jntTorques.torques.resize(LBR_MNJ);
+	m_jntPos.resize(LBR_MNJ);
+	m_jntTorques.resize(LBR_MNJ);
 
 }
 
@@ -138,43 +138,42 @@ void FRIComponent::updateHook() {
 
 		m_fromKRL = m_msr_data.krl;
 		for (unsigned int i = 0; i < LBR_MNJ; i++)
-			m_jntPos.positions[i].value = m_msr_data.data.msrJntPos[i];
+			m_jntPos[i] = m_msr_data.data.msrJntPos[i];
 		m_msrJntPosPort.write(m_jntPos);
 
 		for (unsigned int i = 0; i < LBR_MNJ; i++)
-			m_jntPos.positions[i].value = m_msr_data.data.cmdJntPos[i];
+			m_jntPos[i] = m_msr_data.data.cmdJntPos[i];
 		m_cmdJntPosPort.write(m_jntPos);
 
 		for (unsigned int i = 0; i < LBR_MNJ; i++)
-			m_jntPos.positions[i].value = m_msr_data.data.cmdJntPosFriOffset[i];
+			m_jntPos[i] = m_msr_data.data.cmdJntPosFriOffset[i];
 		m_cmdJntPosFriOffsetPort.write(m_jntPos);
 
 		geometry_msgs::Quaternion quat;
-		KDL::Rotation rot(m_msr_data.data.msrCartPos[0],
+		KDL::Frame cartPos;
+		cartPos.M=KDL::Rotation(m_msr_data.data.msrCartPos[0],
 				m_msr_data.data.msrCartPos[1], m_msr_data.data.msrCartPos[2],
 				m_msr_data.data.msrCartPos[4], m_msr_data.data.msrCartPos[5],
 				m_msr_data.data.msrCartPos[6], m_msr_data.data.msrCartPos[8],
 				m_msr_data.data.msrCartPos[9], m_msr_data.data.msrCartPos[10]);
-		rot.GetQuaternion(m_cartPos.orientation.x, m_cartPos.orientation.y,
-				m_cartPos.orientation.z, m_cartPos.orientation.w);
-		m_cartPos.position.x = m_msr_data.data.msrCartPos[3];
-		m_cartPos.position.y = m_msr_data.data.msrCartPos[7];
-		m_cartPos.position.z = m_msr_data.data.msrCartPos[11];
+		cartPos.p.x(m_msr_data.data.msrCartPos[3]);
+		cartPos.p.y(m_msr_data.data.msrCartPos[7]);
+		cartPos.p.z(m_msr_data.data.msrCartPos[11]);
+		tf::PoseKDLToMsg(cartPos,m_cartPos);
 		m_msrCartPosPort.write(m_cartPos);
 
-		rot = KDL::Rotation(m_msr_data.data.cmdCartPos[0],
+		cartPos.M = KDL::Rotation(m_msr_data.data.cmdCartPos[0],
 				m_msr_data.data.cmdCartPos[1], m_msr_data.data.cmdCartPos[2],
 				m_msr_data.data.cmdCartPos[4], m_msr_data.data.cmdCartPos[5],
 				m_msr_data.data.cmdCartPos[6], m_msr_data.data.cmdCartPos[8],
 				m_msr_data.data.cmdCartPos[9], m_msr_data.data.cmdCartPos[10]);
-		rot.GetQuaternion(m_cartPos.orientation.x, m_cartPos.orientation.y,
-				m_cartPos.orientation.z, m_cartPos.orientation.w);
-		m_cartPos.position.x = m_msr_data.data.cmdCartPos[3];
-		m_cartPos.position.y = m_msr_data.data.cmdCartPos[7];
-		m_cartPos.position.z = m_msr_data.data.cmdCartPos[11];
+		cartPos.p.x(m_msr_data.data.cmdCartPos[3]);
+		cartPos.p.y(m_msr_data.data.cmdCartPos[7]);
+		cartPos.p.z(m_msr_data.data.cmdCartPos[11]);
+		tf::PoseKDLToMsg(cartPos,m_cartPos);
 		m_cmdCartPosPort.write(m_cartPos);
 
-		rot = KDL::Rotation(m_msr_data.data.cmdCartPosFriOffset[0],
+		cartPos.M = KDL::Rotation(m_msr_data.data.cmdCartPosFriOffset[0],
 				m_msr_data.data.cmdCartPosFriOffset[1],
 				m_msr_data.data.cmdCartPosFriOffset[2],
 				m_msr_data.data.cmdCartPosFriOffset[4],
@@ -183,20 +182,19 @@ void FRIComponent::updateHook() {
 				m_msr_data.data.cmdCartPosFriOffset[8],
 				m_msr_data.data.cmdCartPosFriOffset[9],
 				m_msr_data.data.cmdCartPosFriOffset[10]);
-		rot.GetQuaternion(m_cartPos.orientation.x, m_cartPos.orientation.y,
-				m_cartPos.orientation.z, m_cartPos.orientation.w);
-		m_cartPos.position.x = m_msr_data.data.cmdCartPosFriOffset[3];
-		m_cartPos.position.y = m_msr_data.data.cmdCartPosFriOffset[7];
-		m_cartPos.position.z = m_msr_data.data.cmdCartPosFriOffset[11];
+		cartPos.p.x(m_msr_data.data.cmdCartPosFriOffset[3]);
+		cartPos.p.y(m_msr_data.data.cmdCartPosFriOffset[7]);
+		cartPos.p.z(m_msr_data.data.cmdCartPosFriOffset[11]);
+		tf::PoseKDLToMsg(cartPos,m_cartPos);
 		m_cmdCartPosFriOffsetPort.write(m_cartPos);
 
 		for (unsigned int i = 0; i < LBR_MNJ; i++)
-			m_jntTorques.torques[i].value = m_msr_data.data.msrJntTrq[i];
+			m_jntTorques[i] = m_msr_data.data.msrJntTrq[i];
 
 		m_msrJntTrqPort.write(m_jntTorques);
 
 		for (unsigned int i = 0; i < LBR_MNJ; i++)
-			m_jntTorques.torques[i].value = m_msr_data.data.estExtJntTrq[i];
+			m_jntTorques[i] = m_msr_data.data.estExtJntTrq[i];
 		m_estExtJntTrqPort.write(m_jntTorques);
 
 		m_cartWrench.force.x = m_msr_data.data.estExtTcpFT[0];
@@ -239,13 +237,13 @@ void FRIComponent::updateHook() {
 				m_cmd_data.cmd.cmdFlags = FRI_CMD_JNTPOS;
 				if (NewData == m_jntPosPort.read(m_jntPos))
 					for (unsigned int i = 0; i < LBR_MNJ; i++)
-						m_cmd_data.cmd.jntPos[i] = m_jntPos.positions[i].value;
+						m_cmd_data.cmd.jntPos[i] = m_jntPos[i];
 			} else if (m_control_mode == 3) {
 				m_cmd_data.cmd.cmdFlags = FRI_CMD_JNTTRQ;
 				if (NewData == m_addJntTrqPort.read(m_jntTorques))
 					for (unsigned int i = 0; i < LBR_MNJ; i++)
 						m_cmd_data.cmd.addJntTrq[i]
-								= m_jntTorques.torques[i].value;
+								= m_jntTorques[i];
 			} else if (m_control_mode == 4) {
 				m_cmd_data.cmd.cmdFlags = FRI_CMD_CARTPOS;
 				if (NewData == m_cartPosPort.read(m_cartPos)) {
@@ -278,8 +276,9 @@ void FRIComponent::updateHook() {
 				}
 			}
 
-			m_cmd_data.krl = m_toKRL;
 		}
+		
+		m_cmd_data.krl = m_toKRL;
 
 		if (0 > sendto(m_socket, (void*) &m_cmd_data, sizeof(m_cmd_data), 0,
 				(sockaddr*) &m_remote_addr, sizeof(m_remote_addr)))
@@ -295,4 +294,4 @@ void FRIComponent::updateHook() {
 	}
 }//namespace LWR
 
-ORO_CREATE_COMPONENT(lwr_fri_rtt_2_0::FRIComponent)
+ORO_CREATE_COMPONENT(lwr_fri::FRIComponent)
