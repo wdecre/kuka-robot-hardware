@@ -224,11 +224,11 @@ void FRIComponent::updateHook() {
 					m_cmd_data.cmd.addJntTrq[i] = 0.0;
 			} else if (m_control_mode == 4 || m_control_mode == 6) {
 				m_cmd_data.cmd.cmdFlags = FRI_CMD_CARTPOS;
-				for (unsigned int i = 0; i < LBR_MNJ; i++)
+				for (unsigned int i = 0; i < FRI_CART_FRM_DIM; i++)
 					m_cmd_data.cmd.cartPos[i] = m_msr_data.data.cmdCartPos[i];
 			} else if (m_control_mode == 5) {
 				m_cmd_data.cmd.cmdFlags = FRI_CMD_TCPFT;
-				for (unsigned int i = 0; i < LBR_MNJ; i++)
+				for (unsigned int i = 0; i < FRI_CART_VEC; i++)
 					m_cmd_data.cmd.addTcpFT[i] = 0.0;
 			}
 		}
