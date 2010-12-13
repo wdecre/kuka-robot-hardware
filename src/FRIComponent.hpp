@@ -32,6 +32,7 @@
 #include <kdl/jacobian.hpp>
 
 #include <geometry_msgs/Pose.h>
+#include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Wrench.h>
 
 
@@ -62,6 +63,7 @@ private:
         std::vector<double> m_jntTorques;
 
         geometry_msgs::Pose m_cartPos;
+        geometry_msgs::Twist m_cartTwist;
         geometry_msgs::Wrench m_cartWrench;
 
 	tFriKrlData m_fromKRL;
@@ -92,6 +94,7 @@ private:
 
 	InputPort<std::vector<double> > m_jntPosPort;
         InputPort<geometry_msgs::Pose> m_cartPosPort;
+        InputPort<geometry_msgs::Twist> m_cartTwistPort;
 	InputPort<std::vector<double> > m_addJntTrqPort;
         InputPort<geometry_msgs::Wrench> m_addTcpWrenchPort;
         //InputPort<JointImpedances> m_jntImpedancePort;
