@@ -60,6 +60,7 @@ private:
 	tFriCmdData m_cmd_data;
 
         std::vector<double> m_jntPos;
+        std::vector<double> m_jntVel;
         std::vector<double> m_jntTorques;
 
         geometry_msgs::Pose m_cartPos;
@@ -80,7 +81,7 @@ private:
 	 * Current robot data
 	 */
 	OutputPort<std::vector<double> > m_msrJntPosPort;
-	OutputPort<std::vector<double> > m_cmdJntPosPort;
+        OutputPort<std::vector<double> > m_cmdJntPosPort;
 	OutputPort<std::vector<double> > m_cmdJntPosFriOffsetPort;
 	OutputPort<geometry_msgs::Pose>  m_msrCartPosPort;
 	OutputPort<geometry_msgs::Pose>  m_cmdCartPosPort;
@@ -93,6 +94,7 @@ private:
 	//RTT::OutputPort<std::vector<double> > gravityPort;
 
 	InputPort<std::vector<double> > m_jntPosPort;
+        InputPort<std::vector<double> > m_jntVelPort;
         InputPort<geometry_msgs::Pose> m_cartPosPort;
         InputPort<geometry_msgs::Twist> m_cartTwistPort;
 	InputPort<std::vector<double> > m_addJntTrqPort;

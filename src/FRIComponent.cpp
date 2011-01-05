@@ -60,6 +60,7 @@ FRIComponent::FRIComponent(const string& name) :
 	this->addPort("estExtJntTrq", m_estExtJntTrqPort);
 	this->addPort("estExtTcpWrench", m_estExtTcpWrenchPort);
 	this->addPort("desJntPos", m_jntPosPort);
+	this->addPort("desJntVel", m_jntVelPort);
 	this->addPort("desCartPos", m_cartPosPort);
 	this->addPort("desCartTwist", m_cartTwistPort);
 	this->addPort("desAddJntTrq", m_addJntTrqPort);
@@ -68,9 +69,10 @@ FRIComponent::FRIComponent(const string& name) :
 	//this->addPort("desCartImpedance", m_cartImpedancePort);
 
 	this->addProperty("local_port", m_local_port);
-	this->addProperty("control_mode", m_control_mode).doc("1=JntPos, 3=JntTrq, 4=CartPos, 5=CartForce, 6=CartTwist");
+	this->addProperty("control_mode", m_control_mode).doc("1=JntPos, 2=JntVel, 3=JntTrq, 4=CartPos, 5=CartForce, 6=CartTwist");
 
 	m_jntPos.resize(LBR_MNJ);
+	m_jntVel.resize(LBR_MNJ);
 	m_jntTorques.resize(LBR_MNJ);
 
 }
@@ -214,7 +216,7 @@ void FRIComponent::updateHook() {
 
 		///TODO: How are we choosing this? -> only change in monitor mode
 		if (m_msr_data.intf.state == FRI_STATE_MON) {
-			if (m_control_mode == 1) {
+			if (m_control_mode == 1 || m_control_mode == 2) {
 				m_cmd_data.cmd.cmdFlags = FRI_CMD_JNTPOS;
 				for (unsigned int i = 0; i < LBR_MNJ; i++)
 					m_cmd_data.cmd.jntPos[i] = m_msr_data.data.cmdJntPos[i];
@@ -239,6 +241,11 @@ void FRIComponent::updateHook() {
 				if (NewData == m_jntPosPort.read(m_jntPos))
 					for (unsigned int i = 0; i < LBR_MNJ; i++)
 						m_cmd_data.cmd.jntPos[i] = m_jntPos[i];
+			} else	if (m_control_mode == 2) {
+				m_cmd_data.cmd.cmdFlags = FRI_CMD_JNTPOS;
+				if (NewData == m_jntVelPort.read(m_jntVel))
+					for (unsigned int i = 0; i < LBR_MNJ; i++)
+						m_cmd_data.cmd.jntPos[i] += m_jntVel[i]*m_msr_data.intf.desiredCmdSampleTime;
 			} else if (m_control_mode == 3) {
 				m_cmd_data.cmd.cmdFlags = FRI_CMD_JNTTRQ;
 				if (NewData == m_addJntTrqPort.read(m_jntTorques))
