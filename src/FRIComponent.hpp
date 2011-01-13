@@ -31,23 +31,16 @@
 #include <kdl/jntarray.hpp>
 #include <kdl/jacobian.hpp>
 
-#include <brics_actuator/JointPositions.h>
-#include <brics_actuator/JointVelocities.h>
-#include <brics_actuator/JointTorques.h>
-#include <brics_actuator/JointImpedances.h>
-#include <brics_actuator/JointValues.h>
-
-#include <brics_actuator/CartesianPose.h>
-#include <brics_actuator/CartesianWrench.h>
-#include <brics_actuator/CartesianImpedance.h>
+#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/Twist.h>
+#include <geometry_msgs/Wrench.h>
 
 
 #include <friComm.h>
 
-namespace lwr_fri_rtt_2_0 {
+namespace lwr_fri {
 
 using namespace RTT;
-using namespace brics_actuator;
 
 class FRIComponent: public RTT::TaskContext {
 public:
@@ -66,11 +59,12 @@ private:
 	tFriMsrData m_msr_data;
 	tFriCmdData m_cmd_data;
 
-	JointPositions m_jntPos;
-	JointTorques m_jntTorques;
+        std::vector<double> m_jntPos;
+        std::vector<double> m_jntTorques;
 
-	CartesianPose m_cartPos;
-	CartesianWrench m_cartWrench;
+        geometry_msgs::Pose m_cartPos;
+        geometry_msgs::Twist m_cartTwist;
+        geometry_msgs::Wrench m_cartWrench;
 
 	tFriKrlData m_fromKRL;
 	tFriKrlData m_toKRL;
@@ -85,25 +79,26 @@ private:
 	/**
 	 * Current robot data
 	 */
-	OutputPort<JointPositions> m_msrJntPosPort;
-	OutputPort<JointPositions> m_cmdJntPosPort;
-	OutputPort<JointPositions> m_cmdJntPosFriOffsetPort;
-	OutputPort<CartesianPose>  m_msrCartPosPort;
-	OutputPort<CartesianPose>  m_cmdCartPosPort;
-	OutputPort<CartesianPose>  m_cmdCartPosFriOffsetPort;
-	OutputPort<JointTorques>   m_msrJntTrqPort;
-	OutputPort<JointTorques>   m_estExtJntTrqPort;
-	OutputPort<CartesianWrench> m_estExtTcpWrenchPort;
+	OutputPort<std::vector<double> > m_msrJntPosPort;
+	OutputPort<std::vector<double> > m_cmdJntPosPort;
+	OutputPort<std::vector<double> > m_cmdJntPosFriOffsetPort;
+	OutputPort<geometry_msgs::Pose>  m_msrCartPosPort;
+	OutputPort<geometry_msgs::Pose>  m_cmdCartPosPort;
+	OutputPort<geometry_msgs::Pose>  m_cmdCartPosFriOffsetPort;
+	OutputPort<std::vector<double> >   m_msrJntTrqPort;
+	OutputPort<std::vector<double> >   m_estExtJntTrqPort;
+        OutputPort<geometry_msgs::Wrench> m_estExtTcpWrenchPort;
 	//RTT::OutputPort<KDL::Jacobian> jacobianPort;
 	//RTT::OutputPort<Eigen::MatrixXd > massMatrixPort;
 	//RTT::OutputPort<std::vector<double> > gravityPort;
 
-	InputPort<JointPositions> m_jntPosPort;
-	InputPort<CartesianPose> m_cartPosPort;
-	InputPort<JointTorques> m_addJntTrqPort;
-	InputPort<CartesianWrench> m_addTcpWrenchPort;
-	InputPort<JointImpedances> m_jntImpedancePort;
-	InputPort<CartesianImpedance> m_cartImpedancePort;
+	InputPort<std::vector<double> > m_jntPosPort;
+        InputPort<geometry_msgs::Pose> m_cartPosPort;
+        InputPort<geometry_msgs::Twist> m_cartTwistPort;
+	InputPort<std::vector<double> > m_addJntTrqPort;
+        InputPort<geometry_msgs::Wrench> m_addTcpWrenchPort;
+        //InputPort<JointImpedances> m_jntImpedancePort;
+        //InputPort<CartesianImpedance> m_cartImpedancePort;
 
 	int m_local_port,m_socket,m_remote_port, m_control_mode;
 
