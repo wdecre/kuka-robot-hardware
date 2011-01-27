@@ -101,7 +101,7 @@ bool FRIComponent::configureHook() {
 	}
 
 	// presize the events port
-	m_events.setSample("         10        20        30");
+	m_events.setDataSample("         10        20        30");
 	fri_state_last = 0;
 
 	m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
