@@ -77,6 +77,11 @@ private:
 	//Eigen::Matrix<double,7,7> m_massTmp; Not correct so useless
 
 	/**
+	 * events
+	 */
+	OutputPort<std::string> m_events;
+
+	/**
 	 * statistics
 	 */
 	OutputPort<tFriRobotState> m_RobotStatePort;
@@ -109,7 +114,7 @@ private:
 
 	const char* m_remote_address;
 	struct sockaddr m_remote_addr;
-	uint16_t counter;
+	uint16_t counter, fri_state_last;
 };
 
 }//Namespace LWR
