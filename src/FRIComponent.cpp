@@ -46,6 +46,9 @@ FRIComponent::FRIComponent(const string& name) :
 	this->addAttribute("fromKRL", m_fromKRL);
 	this->addAttribute("toKRL", m_toKRL);
 
+	this->addPort("events", m_events).doc(
+			"Port through which discrete events are emitted");
+
 	this->addPort("RobotState", m_RobotStatePort).doc(
 			"Port containing the status of the robot");
 	this->addPort("FRIState", m_FriStatePort).doc(
@@ -97,6 +100,10 @@ bool FRIComponent::configureHook() {
 		}
 	}
 
+	// presize the events port
+	m_events.setSample("         10        20        30");
+	fri_state_last = 0;
+
 	m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, 0, 0);
 
@@ -129,6 +136,16 @@ void FRIComponent::updateHook() {
 		log(Error) << "bad packet lenght: " << n << ", expected: "
 				<< sizeof(tFriMsrData) << endlog();
 	else {
+		if (fri_state_last != m_msr_data.intf.state) {
+			if(m_msr_data.intf.state == FRI_STATE_MON)
+				m_events.write("e_fri_mon_mode");
+			else if(m_msr_data.intf.state == FRI_STATE_CMD) 
+				m_events.write("e_fri_cmd_mode");
+			else
+				m_events.write("e_fri_unkown_mode");
+			fri_state_last = m_msr_data.intf.state;
+		}
+
 		m_RobotStatePort.write(m_msr_data.robot);
 		m_FriStatePort.write(m_msr_data.intf);
 
