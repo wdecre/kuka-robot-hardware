@@ -11,7 +11,6 @@
   <depend package="kuka_lwr_fri"/>
 <!--   <depend package="kuka_lwr_fri_typekit"/> -->
   <depend package="rtt"/>
-  <depend package="ocl"/>
   <depend package="orocos_kdl"/>
   <depend package="geometry_msgs"/>
   <depend package="tf_conversions"/>

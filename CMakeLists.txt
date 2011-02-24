@@ -39,3 +39,6 @@ find_package(Orocos-RTT REQUIRED ${RTT_HINTS})
 include(${OROCOS-RTT_USE_FILE_PATH}/UseOROCOS-RTT.cmake)
 
 orocos_component(lwr_fri src/FRIComponent.cpp) # ...you may add multiple source files
+
+orocos_component(lwr_fri_rt src/FRIRTNetComponent.cpp)
+target_link_libraries(lwr_fri_rt rtdm)

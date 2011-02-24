@@ -33,14 +33,17 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "FRIComponent.hpp"
+#include "FRIRTNetComponent.hpp"
 #include <tf_conversions/tf_kdl.h>
+
+#include <rtdm/rtdm.h>
+
 
 namespace lwr_fri {
 
 using namespace RTT;
 
-FRIComponent::FRIComponent(const string& name) :
+FRIRTNetComponent::FRIRTNetComponent(const string& name) :
 	TaskContext(name, PreOperational){
 
 	this->addAttribute("fromKRL", m_fromKRL);
@@ -80,10 +83,10 @@ FRIComponent::FRIComponent(const string& name) :
 
 }
 
-FRIComponent::~FRIComponent() {
+FRIRTNetComponent::~FRIRTNetComponent() {
 }
 
-bool FRIComponent::configureHook() {
+bool FRIRTNetComponent::configureHook() {
 	//Check the sizes of all data:
 	if (!FRI_CHECK_SIZES_OK) {
 		log(Error) << "Padding on this platform is not OK :(" << endlog();
@@ -104,8 +107,8 @@ bool FRIComponent::configureHook() {
 	m_events.setDataSample("         10        20        30");
 	fri_state_last = 0;
 
-	m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, 0, 0);
+	m_socket = rt_dev_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	rt_dev_setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, 0, 0);
 
 	struct sockaddr_in local_addr;
 	bzero((char *) &local_addr, sizeof(local_addr));
@@ -113,7 +116,7 @@ bool FRIComponent::configureHook() {
 	local_addr.sin_addr.s_addr = INADDR_ANY;
 	local_addr.sin_port = htons(m_local_port);
 
-	if (bind(m_socket, (sockaddr*) &local_addr, sizeof(sockaddr_in)) < 0) {
+	if (rt_dev_bind(m_socket, (sockaddr*) &local_addr, sizeof(sockaddr_in)) < 0) {
 		log(Error) << "Binding of port failed with errno " << errno << endlog();
 		return false;
 	}
@@ -122,15 +125,15 @@ bool FRIComponent::configureHook() {
 
 }
 
-bool FRIComponent::startHook() {
+bool FRIRTNetComponent::startHook() {
 	counter = 0;
 	return true;
 }
 
-void FRIComponent::updateHook() {
+void FRIRTNetComponent::updateHook() {
 	//Read:
 	socklen_t addr_len = sizeof(m_remote_addr);
-	int n = recvfrom(m_socket, (void*) &m_msr_data, sizeof(m_msr_data), 0,
+	int n = rt_dev_recvfrom(m_socket, (void*) &m_msr_data, sizeof(m_msr_data), 0,
 			&m_remote_addr, &addr_len);
 	if (sizeof(tFriMsrData) != n)
 		log(Error) << "bad packet lenght: " << n << ", expected: "
@@ -338,18 +341,18 @@ void FRIComponent::updateHook() {
 		
 		m_cmd_data.krl = m_toKRL;
 
-		if (0 > sendto(m_socket, (void*) &m_cmd_data, sizeof(m_cmd_data), 0,
+		if (0 > rt_dev_sendto(m_socket, (void*) &m_cmd_data, sizeof(m_cmd_data), 0,
 				(sockaddr*) &m_remote_addr, sizeof(m_remote_addr)))
 			log(Error) << "Sending datagram failed." << endlog();
 	}
 		this->trigger();
 	}
 
-	void FRIComponent::stopHook() {
+	void FRIRTNetComponent::stopHook() {
 	}
 
-	void FRIComponent::cleanupHook() {
+	void FRIRTNetComponent::cleanupHook() {
 	}
 }//namespace LWR
 
-ORO_CREATE_COMPONENT(lwr_fri::FRIComponent)
+ORO_CREATE_COMPONENT(lwr_fri::FRIRTNetComponent)
