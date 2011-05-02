@@ -40,5 +40,19 @@ include(${OROCOS-RTT_USE_FILE_PATH}/UseOROCOS-RTT.cmake)
 
 orocos_component(lwr_fri src/FRIComponent.cpp) # ...you may add multiple source files
 
+#common commands for building c++ executables and libraries
+find_path(RTNET_INCLUDE_DIR NAMES rtnet.h PATH_SUFFIXES rtnet/include)
+if(RTNET_INCLUDE_DIR)
+  message("Found RTNET: ${RTNET_INCLUDE_DIR}")
+  include_directories(${RTNET_INCLUDE_DIR})
+  add_definitions(-DHAVE_RTNET)
+  # try Xenomai
+  execute_process(COMMAND xeno-config --skin=rtdm --cflags OUTPUT_VARIABLE XENO_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+  execute_process(COMMAND xeno-config --skin=rtdm --ldflags OUTPUT_VARIABLE XENO_LDFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${XENO_CFLAGS}")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${XENO_LDFLAGS}")
 orocos_component(lwr_fri_rt src/FRIRTNetComponent.cpp)
-target_link_libraries(lwr_fri_rt rtdm)
+orocos_add_compile_flags(lwr_fri_rt ${XENO_CFLAGS})
+orocos_add_link_flags(lwr_fri_rt ${XENO_LDFLAGS})
+endif()
+
