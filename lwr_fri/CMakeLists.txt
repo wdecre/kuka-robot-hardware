@@ -14,21 +14,21 @@ cmake_minimum_required(VERSION 2.6.3)
 # macro, except for orocos_typekit, where the target is fully
 # controlled by generated code of 'typegen'.
 #
-project(jr3)
+project(lwr_fri)
 
 #
 # Do setup in case of ros package, If ROS_ROOT is set, it is
 # recommended to use RTT/OCL through the ros packages.
 #
 set (ROS_ROOT $ENV{ROS_ROOT} )
-if (ROS_ROOT)
-  include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
-  rosbuild_init()
-  rosbuild_find_ros_package( rtt )
-  rosbuild_find_ros_package( ocl )
-  set( RTT_HINTS HINTS ${rtt_PACKAGE_PATH}/install )
-  set( OCL_HINTS HINTS ${ocl_PACKAGE_PATH}/install )
-endif()
+include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+rosbuild_init()
+rosbuild_find_ros_package( rtt )
+set( RTT_HINTS HINTS ${rtt_PACKAGE_PATH}/install )
+
+rosbuild_genmsg()
+rosbuild_include(rtt_ros_integration GenerateRTTtypekit )
+ros_generate_rtt_typekit(lwr_fri)
 
 # Set the CMAKE_PREFIX_PATH in case you're not using Orocos through ROS
 # for helping these find commands find RTT.
@@ -38,8 +38,6 @@ find_package(Orocos-RTT REQUIRED ${RTT_HINTS})
 # documentation.
 include(${OROCOS-RTT_USE_FILE_PATH}/UseOROCOS-RTT.cmake)
 
-orocos_component(lwr_fri src/FRIComponent.cpp) # ...you may add multiple source files
-
 #common commands for building c++ executables and libraries
 find_path(RTNET_INCLUDE_DIR NAMES rtnet.h PATH_SUFFIXES rtnet/include)
 if(RTNET_INCLUDE_DIR)
@@ -47,12 +45,14 @@ if(RTNET_INCLUDE_DIR)
   include_directories(${RTNET_INCLUDE_DIR})
   add_definitions(-DHAVE_RTNET)
   # try Xenomai
-  execute_process(COMMAND xeno-config --skin=rtdm --cflags OUTPUT_VARIABLE XENO_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
-  execute_process(COMMAND xeno-config --skin=rtdm --ldflags OUTPUT_VARIABLE XENO_LDFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+  execute_process(COMMAND xeno-config --skin=posix --cflags OUTPUT_VARIABLE XENO_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+  execute_process(COMMAND xeno-config --skin=posix --ldflags OUTPUT_VARIABLE XENO_LDFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${XENO_CFLAGS}")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${XENO_LDFLAGS}")
-orocos_component(lwr_fri_rt src/FRIRTNetComponent.cpp)
-orocos_add_compile_flags(lwr_fri_rt ${XENO_CFLAGS})
-orocos_add_link_flags(lwr_fri_rt ${XENO_LDFLAGS})
+  orocos_component(lwr_fri src/FRIComponent.cpp) # ...you may add multiple source files
+  orocos_add_compile_flags(lwr_fri ${XENO_CFLAGS})
+  orocos_add_link_flags(lwr_fri ${XENO_LDFLAGS})
+else()
+  orocos_component(lwr_fri src/FRIComponent.cpp) # ...you may add multiple source files
 endif()
 
