@@ -23,7 +23,6 @@
 #include <rtt/Logger.hpp>
 #include <kdl/frames.hpp>
 
-
 #include "FRIComponent.hpp"
 #include <tf_conversions/tf_kdl.h>
 
@@ -38,12 +37,12 @@ namespace lwr_fri {
 using namespace RTT;
 
 FRIComponent::FRIComponent(const string& name) :
-	TaskContext(name, PreOperational){
+	TaskContext(name, PreOperational) {
 
-        this->addPort("fromKRL", port_from_krl);
-        this->addPort("toKRL", port_to_krl);
-  
-        this->addPort("events", port_events).doc(
+	this->addPort("fromKRL", port_from_krl);
+	this->addPort("toKRL", port_to_krl);
+
+	this->addPort("events", port_events).doc(
 			"Port through which discrete events are emitted");
 	this->addPort("RobotState", port_robot_state).doc(
 			"Port containing the status of the robot");
@@ -53,26 +52,26 @@ FRIComponent::FRIComponent(const string& name) :
 	this->addPort("JointState", port_joint_state);
 	this->addPort("FriJointState", port_fri_joint_state);
 	/*
-	this->addPort("msrCartPos", m_msrCartPosPort);
-	this->addPort("cmdCartPos", m_cmdCartPosPort);
-	this->addPort("cmdCartPosFriOffset", m_cmdCartPosFriOffsetPort);
-	this->addPort("estExtTcpWrench", m_estExtTcpWrenchPort);
-	*/
+	 this->addPort("msrCartPos", m_msrCartPosPort);
+	 this->addPort("cmdCartPos", m_cmdCartPosPort);
+	 this->addPort("cmdCartPosFriOffset", m_cmdCartPosFriOffsetPort);
+	 this->addPort("estExtTcpWrench", m_estExtTcpWrenchPort);
+	 */
 
-	this->addPort("FriJointCommand",port_fri_joint_command);
-	this->addPort("FriJointImpedance",port_fri_joint_impedance);
+	this->addPort("FriJointCommand", port_fri_joint_command);
+	this->addPort("FriJointImpedance", port_fri_joint_impedance);
 
 	/*
-	this->addPort("desCartPos", m_cartPosPort);
-	this->addPort("desCartTwist", m_cartTwistPort);
-	this->addPort("desAddTcpWrench", m_addTcpWrenchPort);
-	this->addPort("desCartImpedance", m_cartImpedancePort);
-	*/
+	 this->addPort("desCartPos", m_cartPosPort);
+	 this->addPort("desCartTwist", m_cartTwistPort);
+	 this->addPort("desAddTcpWrench", m_addTcpWrenchPort);
+	 this->addPort("desCartImpedance", m_cartImpedancePort);
+	 */
 
 	this->addProperty("udp_port", prop_local_port);
 	/*
-	this->addProperty("control_mode", prop_control_mode).doc("1=JntPos, 2=JntVel, 3=JntTrq, 4=CartPos, 5=CartForce, 6=CartTwist");
-	*/
+	 this->addProperty("control_mode", prop_control_mode).doc("1=JntPos, 2=JntVel, 3=JntTrq, 4=CartPos, 5=CartForce, 6=CartTwist");
+	 */
 
 }
 
@@ -105,16 +104,16 @@ bool FRIComponent::configureHook() {
 	m_joint_states.name.resize(LBR_MNJ);
 	m_joint_states.position.resize(LBR_MNJ);
 	m_joint_states.effort.resize(LBR_MNJ);
-	
-	for(unsigned int i = 0;i<LBR_MNJ;i++){
-	  ostringstream ss;
-	  ss << "joint_"<<i;
-	  m_joint_states.name[i]=ss.str();
+
+	for (unsigned int i = 0; i < LBR_MNJ; i++) {
+		ostringstream ss;
+		ss << "joint_" << i;
+		m_joint_states.name[i] = ss.str();
 	}
 	port_joint_state.setDataSample(m_joint_states);
 
 	if (fri_create_socket() != 0)
-	  return false;
+		return false;
 
 	provides()->addAttribute("counter", counter);
 	return true;
