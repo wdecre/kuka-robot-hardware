@@ -365,63 +365,61 @@ void FRIComponent::updateHook() {
 			}
 		}
 	}
+
+	//m_cmd_data.krl = m_toKRL;
+	if (fri_send() != 0)
+		this->error();
+	this->trigger();
+}
+
+void FRIComponent::stopHook() {
+}
+
+void FRIComponent::cleanupHook() {
+	close(m_socket);
+}
+
+int FRIComponent::fri_create_socket() {
+	if (m_socket != 0)
+		close(m_socket);
+	m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, 0, 0);
+
+	struct sockaddr_in local_addr;
+	bzero((char *) &local_addr, sizeof(local_addr));
+	local_addr.sin_family = AF_INET;
+	local_addr.sin_addr.s_addr = INADDR_ANY;
+	local_addr.sin_port = htons(prop_local_port);
+
+	if (bind(m_socket, (sockaddr*) &local_addr, sizeof(sockaddr_in)) < 0) {
+		log(Error) << "Binding of port failed with errno " << errno << endlog();
+		return -1;
 	}
+
+	return 0;
+}
+
+int FRIComponent::fri_recv() {
+	int n = recvfrom(m_socket, (void*) &m_msr_data, sizeof(m_msr_data), 0,
+			(sockaddr*) &m_remote_addr, &m_sock_addr_len);
+	if (sizeof(tFriMsrData) != n) {
+		log(Error) << "bad packet lenght: " << n << ", expected: "
+				<< sizeof(tFriMsrData) << endlog();
+		return -1;
 	}
-	*/
-      }
-    }
-    
-    //m_cmd_data.krl = m_toKRL;
-    if(fri_send() != 0)
-      this->error();
-    this->trigger();
-  }
-  
-  void FRIComponent::stopHook() {
-  }
+	return 0;
+}
 
-  void FRIComponent::cleanupHook() {
-  }
-
-  int FRIComponent::fri_create_socket(){
-    m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, 0, 0);
-  
-    struct sockaddr_in local_addr;
-    bzero((char *) &local_addr, sizeof(local_addr));
-    local_addr.sin_family = AF_INET;
-    local_addr.sin_addr.s_addr = INADDR_ANY;
-    local_addr.sin_port = htons(prop_local_port);
-  
-    if (bind(m_socket, (sockaddr*) &local_addr, sizeof(sockaddr_in)) < 0) {
-      log(Error) << "Binding of port failed with errno " << errno << endlog();
-      return -1;
-    }
-
-    return 0;
-  }
-
-  int FRIComponent::fri_recv(){
-    int n = recvfrom(m_socket, (void*) &m_msr_data, sizeof(m_msr_data), 0,
-		    (sockaddr*)&m_remote_addr, &m_sock_addr_len);
-    if (sizeof(tFriMsrData) != n) {
-      log(Error) << "bad packet lenght: " << n << ", expected: "
-		 << sizeof(tFriMsrData) << endlog();
-      return -1;
-    }
-    return 0;
-  }
-
-  int FRIComponent::fri_send(){
-    if (0 > sendto(m_socket, (void*) &m_cmd_data, sizeof(m_cmd_data), 0,
-		   (sockaddr*)&m_remote_addr, m_sock_addr_len)) {
-      log(Error) << "Sending datagram failed." << endlog();
-      return -1;
-    }
-    return 0;
-  }
+int FRIComponent::fri_send() {
+	if (0 > sendto(m_socket, (void*) &m_cmd_data, sizeof(m_cmd_data), 0,
+			(sockaddr*) &m_remote_addr, m_sock_addr_len)) {
+		log(Error) << "Sending datagram failed." << endlog();
+		return -1;
+	}
+	return 0;
+}
 
 }//namespace LWR
-  
+
 ORO_CREATE_COMPONENT(lwr_fri::FRIComponent)
-  
+

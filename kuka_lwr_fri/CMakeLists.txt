@@ -4,7 +4,7 @@
 #
 cmake_minimum_required(VERSION 2.6.3)
 
-project(kuka_lwr_fri)
+#project(kuka_lwr_fri)
 
 #
 # Do setup in case of ros package, If ROS_ROOT is set, it is

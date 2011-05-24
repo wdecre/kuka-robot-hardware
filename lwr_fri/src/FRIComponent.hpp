@@ -63,16 +63,16 @@ private:
 	tFriMsrData m_msr_data;
 	tFriCmdData m_cmd_data;
 
-        sensor_msgs::JointState m_joint_states;
-        lwr_fri::FriJointState m_fri_joint_state;
-  
-        /*
-        geometry_msgs::Pose m_cartPos;
-        geometry_msgs::Twist m_cartTwist;
-        geometry_msgs::Wrench m_cartWrench;
-	*/
-        OutputPort<tFriKrlData> port_from_krl;
-        OutputPort<tFriKrlData> port_to_krl;
+	sensor_msgs::JointState m_joint_states;
+	lwr_fri::FriJointState m_fri_joint_state;
+
+	/*
+	 geometry_msgs::Pose m_cartPos;
+	 geometry_msgs::Twist m_cartTwist;
+	 geometry_msgs::Wrench m_cartWrench;
+	 */
+	OutputPort<tFriKrlData> port_from_krl;
+	OutputPort<tFriKrlData> port_to_krl;
 	//Eigen::Matrix<double,7,7> m_massTmp; Not correct so useless
 
 	/**
