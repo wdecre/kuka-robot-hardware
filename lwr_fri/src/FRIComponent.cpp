@@ -125,207 +125,247 @@ bool FRIComponent::startHook() {
 }
 
 void FRIComponent::updateHook() {
-  //Read:
-  if(fri_recv() == 0){
+	//Read:
+	if (fri_recv() == 0) {
 
-    //Check state and fire event if changed
-    if (fri_state_last != m_msr_data.intf.state) {
-      if(m_msr_data.intf.state == FRI_STATE_MON)
-	port_events.write("e_fri_mon_mode");
-      else if(m_msr_data.intf.state == FRI_STATE_CMD) 
-	port_events.write("e_fri_cmd_mode");
-      else
-	port_events.write("e_fri_unkown_mode");
-      fri_state_last = m_msr_data.intf.state;
-    }
+		//Check state and fire event if changed
+		if (fri_state_last != m_msr_data.intf.state) {
+			if (m_msr_data.intf.state == FRI_STATE_MON)
+				port_events.write("e_fri_mon_mode");
+			else if (m_msr_data.intf.state == FRI_STATE_CMD)
+				port_events.write("e_fri_cmd_mode");
+			else
+				port_events.write("e_fri_unkown_mode");
+			fri_state_last = m_msr_data.intf.state;
+		}
 
-    //Put robot and fri state on the ports(no parsing)
-    port_robot_state.write(m_msr_data.robot);
-    port_fri_state.write(m_msr_data.intf);
-    
-    //Put KRL data onto the ports(no parsing)
-    port_from_krl.write(m_msr_data.krl);
+		//Put robot and fri state on the ports(no parsing)
+		port_robot_state.write(m_msr_data.robot);
+		port_fri_state.write(m_msr_data.intf);
 
-    // Fill in fri_joint_state and joint_state
-    memcpy(m_fri_joint_state.msrJntPos.c_array(), m_msr_data.data.msrJntPos,LBR_MNJ);
-    memcpy(m_fri_joint_state.cmdJntPos.c_array(), m_msr_data.data.cmdJntPos,LBR_MNJ);
-    memcpy(m_fri_joint_state.cmdJntPosFriOffset.c_array(), m_msr_data.data.cmdJntPosFriOffset,LBR_MNJ);
-    memcpy(m_fri_joint_state.msrJntTrq.c_array(), m_msr_data.data.msrJntTrq,LBR_MNJ);
-    memcpy(m_fri_joint_state.estExtJntTrq.c_array(), m_msr_data.data.estExtJntTrq,LBR_MNJ);
-    m_joint_states.position.assign(m_msr_data.data.msrJntPos, m_msr_data.data.msrJntPos + LBR_MNJ);
-    m_joint_states.effort.assign(m_msr_data.data.estExtJntTrq, m_msr_data.data.estExtJntTrq + LBR_MNJ);
+		//Put KRL data onto the ports(no parsing)
+		port_from_krl.write(m_msr_data.krl);
 
-    port_fri_joint_state.write(m_fri_joint_state);
-    port_joint_state.write(m_joint_states);
-    /*
-    geometry_msgs::Quaternion quat;
-    KDL::Frame cartPos;
-    cartPos.M=KDL::Rotation(m_msr_data.data.msrCartPos[0],
-			    m_msr_data.data.msrCartPos[1], m_msr_data.data.msrCartPos[2],
-			    m_msr_data.data.msrCartPos[4], m_msr_data.data.msrCartPos[5],
-			    m_msr_data.data.msrCartPos[6], m_msr_data.data.msrCartPos[8],
-			    m_msr_data.data.msrCartPos[9], m_msr_data.data.msrCartPos[10]);
-    cartPos.p.x(m_msr_data.data.msrCartPos[3]);
-    cartPos.p.y(m_msr_data.data.msrCartPos[7]);
-    cartPos.p.z(m_msr_data.data.msrCartPos[11]);
-    tf::PoseKDLToMsg(cartPos,m_cartPos);
-    m_msrCartPosPort.write(m_cartPos);
-    
-    cartPos.M = KDL::Rotation(m_msr_data.data.cmdCartPos[0],
-			      m_msr_data.data.cmdCartPos[1], m_msr_data.data.cmdCartPos[2],
-			      m_msr_data.data.cmdCartPos[4], m_msr_data.data.cmdCartPos[5],
-			      m_msr_data.data.cmdCartPos[6], m_msr_data.data.cmdCartPos[8],
-			      m_msr_data.data.cmdCartPos[9], m_msr_data.data.cmdCartPos[10]);
-    cartPos.p.x(m_msr_data.data.cmdCartPos[3]);
-    cartPos.p.y(m_msr_data.data.cmdCartPos[7]);
-    cartPos.p.z(m_msr_data.data.cmdCartPos[11]);
-    tf::PoseKDLToMsg(cartPos,m_cartPos);
-    m_cmdCartPosPort.write(m_cartPos);
-    
-    cartPos.M = KDL::Rotation(m_msr_data.data.cmdCartPosFriOffset[0],
-			      m_msr_data.data.cmdCartPosFriOffset[1],
-			      m_msr_data.data.cmdCartPosFriOffset[2],
-			      m_msr_data.data.cmdCartPosFriOffset[4],
-			      m_msr_data.data.cmdCartPosFriOffset[5],
-			      m_msr_data.data.cmdCartPosFriOffset[6],
-			      m_msr_data.data.cmdCartPosFriOffset[8],
-			      m_msr_data.data.cmdCartPosFriOffset[9],
-			      m_msr_data.data.cmdCartPosFriOffset[10]);
-    cartPos.p.x(m_msr_data.data.cmdCartPosFriOffset[3]);
-    cartPos.p.y(m_msr_data.data.cmdCartPosFriOffset[7]);
-    cartPos.p.z(m_msr_data.data.cmdCartPosFriOffset[11]);
-    tf::PoseKDLToMsg(cartPos,m_cartPos);
-    m_cmdCartPosFriOffsetPort.write(m_cartPos);
-    
-    m_cartWrench.force.x = m_msr_data.data.estExtTcpFT[0];
-    m_cartWrench.force.y = m_msr_data.data.estExtTcpFT[1];
-    m_cartWrench.force.z = m_msr_data.data.estExtTcpFT[2];
-    m_cartWrench.torque.x = m_msr_data.data.estExtTcpFT[5];
-    m_cartWrench.torque.y = m_msr_data.data.estExtTcpFT[4];
-    m_cartWrench.torque.z = m_msr_data.data.estExtTcpFT[3];
-    m_estExtTcpWrenchPort.write(m_cartWrench);
-    */
+		// Fill in fri_joint_state and joint_state
+		for (unsigned int i = 0; i < LBR_MNJ; i++) {
+			m_fri_joint_state.msrJntPos[i] = m_msr_data.data.msrJntPos[i];
+			m_fri_joint_state.cmdJntPos[i] = m_msr_data.data.cmdJntPos[i];
+			m_fri_joint_state.cmdJntPosFriOffset[i]
+					= m_msr_data.data.cmdJntPosFriOffset[i];
+			m_fri_joint_state.msrJntTrq[i] = m_msr_data.data.msrJntTrq[i];
+			m_fri_joint_state.estExtJntTrq[i] = m_msr_data.data.estExtJntTrq[i];
+		}
+		m_joint_states.position.assign(m_msr_data.data.msrJntPos,
+				m_msr_data.data.msrJntPos + LBR_MNJ);
+		m_joint_states.effort.assign(m_msr_data.data.estExtJntTrq,
+				m_msr_data.data.estExtJntTrq + LBR_MNJ);
 
-    //Fill in datagram to send:
-    m_cmd_data.head.datagramId = FRI_DATAGRAM_ID_CMD;
-    m_cmd_data.head.packetSize = sizeof(tFriCmdData);
-    m_cmd_data.head.sendSeqCount = ++counter;
-    m_cmd_data.head.reflSeqCount = m_msr_data.head.sendSeqCount;
-    
-    ///TODO: How are we choosing this? -> only change in monitor mode
-    if (m_msr_data.intf.state == FRI_STATE_MON) {
-    	if (m_control_mode == 1 || m_control_mode == 2) {
-    		m_cmd_data.cmd.cmdFlags = FRI_CMD_JNTPOS;
-    		for (unsigned int i = 0; i < LBR_MNJ; i++)
-    			m_cmd_data.cmd.jntPos[i] = m_msr_data.data.cmdJntPos[i];
-    	} else if (m_control_mode == 3) {
-    		m_cmd_data.cmd.cmdFlags = FRI_CMD_JNTTRQ;
-    		for (unsigned int i = 0; i < LBR_MNJ; i++)
-    			m_cmd_data.cmd.addJntTrq[i] = 0.0;
-    	} else if (m_control_mode == 4 || m_control_mode == 6) {
-    		m_cmd_data.cmd.cmdFlags = FRI_CMD_CARTPOS;
-    		for (unsigned int i = 0; i < FRI_CART_FRM_DIM; i++)
-    			m_cmd_data.cmd.cartPos[i] = m_msr_data.data.cmdCartPos[i];
-    	} else if (m_control_mode == 5) {
-    		m_cmd_data.cmd.cmdFlags = FRI_CMD_TCPFT;
-    		for (unsigned int i = 0; i < FRI_CART_VEC; i++)
-    			m_cmd_data.cmd.addTcpFT[i] = 0.0;
-    	}
-    }
-    //Only send if state is in FRI_STATE_CMD
-    if (m_msr_data.intf.state == FRI_STATE_CMD) {
-	    switch (m_msr_data.robot.control) {
-	    case FRI_CTRL_POSITION:
-		    break;
-	    case FRI_CTRL_CART_IMP:
-		    break;
-	    case FRI_CTRL_POSITION:
-		    break;
-	    case FRI_CTRL_OTHER:
-		    this->error();
-		    break;
-	    }
+		port_fri_joint_state.write(m_fri_joint_state);
+		port_joint_state.write(m_joint_states);
+		/*
+		 geometry_msgs::Quaternion quat;
+		 KDL::Frame cartPos;
+		 cartPos.M=KDL::Rotation(m_msr_data.data.msrCartPos[0],
+		 m_msr_data.data.msrCartPos[1], m_msr_data.data.msrCartPos[2],
+		 m_msr_data.data.msrCartPos[4], m_msr_data.data.msrCartPos[5],
+		 m_msr_data.data.msrCartPos[6], m_msr_data.data.msrCartPos[8],
+		 m_msr_data.data.msrCartPos[9], m_msr_data.data.msrCartPos[10]);
+		 cartPos.p.x(m_msr_data.data.msrCartPos[3]);
+		 cartPos.p.y(m_msr_data.data.msrCartPos[7]);
+		 cartPos.p.z(m_msr_data.data.msrCartPos[11]);
+		 tf::PoseKDLToMsg(cartPos,m_cartPos);
+		 m_msrCartPosPort.write(m_cartPos);
 
-      if (m_control_mode == 1) {
-	m_cmd_data.cmd.cmdFlags = FRI_CMD_JNTPOS;
-	if (NewData == port_fri_joint_command.read(m_fri_joint_command))
-	  for (unsigned int i = 0; i < LBR_MNJ; i++)
-	    m_cmd_data.cmd.jntPos[i] = m_fri_joint_command.jntPos[i];
-      } else	if (m_control_mode == 2) {
-	m_cmd_data.cmd.cmdFlags = FRI_CMD_JNTPOS;
-	if (NewData == port_fri_joint_command.read(m_fri_joint_command))
-	  for (unsigned int i = 0; i < LBR_MNJ; i++)
-	    m_cmd_data.cmd.jntPos[i] += m_fri_joint_command.jntVel[i]*m_msr_data.intf.desiredCmdSampleTime;
-      } else if (m_control_mode == 3) {
-	m_cmd_data.cmd.cmdFlags = FRI_CMD_JNTTRQ;
-	if (NewData == port_fri_joint_command.read(m_fri_joint_command))
-	  for (unsigned int i = 0; i < LBR_MNJ; i++)
-	    m_cmd_data.cmd.addJntTrq[i]
-	      = m_fri_joint_command.addJntTrq[i];
-      } /* else if (m_control_mode == 4) {
-	m_cmd_data.cmd.cmdFlags = FRI_CMD_CARTPOS;
-	if (NewData == m_cartPosPort.read(m_cartPos)) {
-	  KDL::Rotation rot = 
-	    KDL::Rotation::Quaternion(
-				      m_cartPos.orientation.x, m_cartPos.orientation.y,
-				      m_cartPos.orientation.z, m_cartPos.orientation.w);
-	  m_cmd_data.cmd.cartPos[0] = rot.data[0];
-	  m_cmd_data.cmd.cartPos[1] = rot.data[1];
-	  m_cmd_data.cmd.cartPos[2] = rot.data[2];
-	  m_cmd_data.cmd.cartPos[4] = rot.data[3];
-	  m_cmd_data.cmd.cartPos[5] = rot.data[4];
-	  m_cmd_data.cmd.cartPos[6] = rot.data[5];
-	  m_cmd_data.cmd.cartPos[8] = rot.data[6];
-	  m_cmd_data.cmd.cartPos[9] = rot.data[7];
-	  m_cmd_data.cmd.cartPos[10] = rot.data[8];
-	  
-	  m_cmd_data.cmd.cartPos[3] = m_cartPos.position.x;
-	  m_cmd_data.cmd.cartPos[7] = m_cartPos.position.y;
-	  m_cmd_data.cmd.cartPos[11] = m_cartPos.position.z;
+		 cartPos.M = KDL::Rotation(m_msr_data.data.cmdCartPos[0],
+		 m_msr_data.data.cmdCartPos[1], m_msr_data.data.cmdCartPos[2],
+		 m_msr_data.data.cmdCartPos[4], m_msr_data.data.cmdCartPos[5],
+		 m_msr_data.data.cmdCartPos[6], m_msr_data.data.cmdCartPos[8],
+		 m_msr_data.data.cmdCartPos[9], m_msr_data.data.cmdCartPos[10]);
+		 cartPos.p.x(m_msr_data.data.cmdCartPos[3]);
+		 cartPos.p.y(m_msr_data.data.cmdCartPos[7]);
+		 cartPos.p.z(m_msr_data.data.cmdCartPos[11]);
+		 tf::PoseKDLToMsg(cartPos,m_cartPos);
+		 m_cmdCartPosPort.write(m_cartPos);
+
+		 cartPos.M = KDL::Rotation(m_msr_data.data.cmdCartPosFriOffset[0],
+		 m_msr_data.data.cmdCartPosFriOffset[1],
+		 m_msr_data.data.cmdCartPosFriOffset[2],
+		 m_msr_data.data.cmdCartPosFriOffset[4],
+		 m_msr_data.data.cmdCartPosFriOffset[5],
+		 m_msr_data.data.cmdCartPosFriOffset[6],
+		 m_msr_data.data.cmdCartPosFriOffset[8],
+		 m_msr_data.data.cmdCartPosFriOffset[9],
+		 m_msr_data.data.cmdCartPosFriOffset[10]);
+		 cartPos.p.x(m_msr_data.data.cmdCartPosFriOffset[3]);
+		 cartPos.p.y(m_msr_data.data.cmdCartPosFriOffset[7]);
+		 cartPos.p.z(m_msr_data.data.cmdCartPosFriOffset[11]);
+		 tf::PoseKDLToMsg(cartPos,m_cartPos);
+		 m_cmdCartPosFriOffsetPort.write(m_cartPos);
+
+		 m_cartWrench.force.x = m_msr_data.data.estExtTcpFT[0];
+		 m_cartWrench.force.y = m_msr_data.data.estExtTcpFT[1];
+		 m_cartWrench.force.z = m_msr_data.data.estExtTcpFT[2];
+		 m_cartWrench.torque.x = m_msr_data.data.estExtTcpFT[5];
+		 m_cartWrench.torque.y = m_msr_data.data.estExtTcpFT[4];
+		 m_cartWrench.torque.z = m_msr_data.data.estExtTcpFT[3];
+		 m_estExtTcpWrenchPort.write(m_cartWrench);
+		 */
+
+		//Fill in datagram to send:
+		m_cmd_data.head.datagramId = FRI_DATAGRAM_ID_CMD;
+		m_cmd_data.head.packetSize = sizeof(tFriCmdData);
+		m_cmd_data.head.sendSeqCount = ++counter;
+		m_cmd_data.head.reflSeqCount = m_msr_data.head.sendSeqCount;
+
+		///TODO: How are we choosing this? -> only change in monitor mode
+		if (m_msr_data.intf.state == FRI_STATE_MON) {
+			if (m_msr_data.robot.control == FRI_CTRL_POSITION
+					|| m_msr_data.robot.control == FRI_CTRL_JNT_IMP) {
+				m_cmd_data.cmd.cmdFlags = FRI_CMD_JNTPOS;
+				for (unsigned int i = 0; i < LBR_MNJ; i++)
+					m_cmd_data.cmd.jntPos[i] = m_msr_data.data.cmdJntPos[i];
+			} else if (m_msr_data.robot.control == FRI_CTRL_CART_IMP) {
+				m_cmd_data.cmd.cmdFlags = FRI_CMD_CARTPOS;
+				for (unsigned int i = 0; i > FRI_CART_FRM_DIM; i++)
+					m_cmd_data.cmd.cartPos[i] = m_msr_data.data.cmdCartPos[i];
+			} else {
+				log(Warning) << "Unknown control mode." << endlog();
+			}
+		}
+		//Only send if state is in FRI_STATE_CMD
+		if (m_msr_data.intf.state == FRI_STATE_CMD) {
+			//Valid ports in joint position and joint impedance mode
+			if (m_msr_data.robot.control == FRI_CTRL_POSITION
+					|| m_msr_data.robot.control == FRI_CTRL_JNT_IMP) {
+				//Read desired positions
+				if (port_joint_pos_command.read(m_joint_pos_command) == NewData) {
+					if (m_joint_pos_command.positions.size() == LBR_MNJ) {
+						m_cmd_data.cmd.cmdFlags |= FRI_CMD_JNTPOS;
+						for (unsigned int i = 0; i < LBR_MNJ; i++)
+							m_cmd_data.cmd.jntPos[i]
+									= m_joint_pos_command.positions[i];
+					} else
+						log(Warning) << "Size of "
+								<< port_joint_pos_command.getName()
+								<< " not equal to " << LBR_MNJ << endlog();
+
+				}
+				//Read desired velocities
+				if (port_joint_vel_command.read(m_joint_vel_command) == NewData) {
+					if (m_joint_vel_command.velocities.size() == LBR_MNJ) {
+						m_cmd_data.cmd.cmdFlags |= FRI_CMD_JNTPOS;
+						for (unsigned int i = 0; i < LBR_MNJ; i++)
+							m_cmd_data.cmd.jntPos[i]
+									+= m_joint_vel_command.velocities[i]
+											* m_msr_data.intf.desiredCmdSampleTime;
+					} else
+						log(Warning) << "Size of "
+								<< port_joint_vel_command.getName()
+								<< " not equal to " << LBR_MNJ << endlog();
+				}
+			}
+			//Valid ports only in joint impedance mode
+			if (m_msr_data.robot.control == FRI_CTRL_JNT_IMP) {
+				//Read desired additional joint torques
+				if (port_joint_effort_command.read(m_joint_effort_command)
+						== NewData) {
+					//Check size
+					if (m_joint_effort_command.efforts.size() == LBR_MNJ) {
+						m_cmd_data.cmd.cmdFlags |= FRI_CMD_JNTTRQ;
+						for (unsigned int i = 0; i < LBR_MNJ; i++)
+							m_cmd_data.cmd.addJntTrq[i]
+									= m_joint_effort_command.efforts[i];
+					} else
+						log(Warning) << "Size of "
+								<< port_joint_effort_command.getName()
+								<< " not equal to " << LBR_MNJ << endlog();
+
+				}
+				//Read desired joint impedance
+				if (port_fri_joint_impedance.read(m_fri_joint_impedance)
+						== NewData) {
+					m_cmd_data.cmd.cmdFlags |= FRI_CMD_JNTSTIFF
+							| FRI_CMD_JNTDAMP;
+					for (unsigned int i = 0; i < LBR_MNJ; i++) {
+						m_cmd_data.cmd.jntStiffness[i]
+								= m_fri_joint_impedance.stiffness[i];
+						m_cmd_data.cmd.jntDamping[i]
+								= m_fri_joint_impedance.damping[i];
+					}
+				}
+			} else if (m_msr_data.robot.control == FRI_CTRL_CART_IMP) {
+				/* else if (m_control_mode == 4) {
+				 m_cmd_data.cmd.cmdFlags = FRI_CMD_CARTPOS;
+				 if (NewData == m_cartPosPort.read(m_cartPos)) {
+				 KDL::Rotation rot =
+				 KDL::Rotation::Quaternion(
+				 m_cartPos.orientation.x, m_cartPos.orientation.y,
+				 m_cartPos.orientation.z, m_cartPos.orientation.w);
+				 m_cmd_data.cmd.cartPos[0] = rot.data[0];
+				 m_cmd_data.cmd.cartPos[1] = rot.data[1];
+				 m_cmd_data.cmd.cartPos[2] = rot.data[2];
+				 m_cmd_data.cmd.cartPos[4] = rot.data[3];
+				 m_cmd_data.cmd.cartPos[5] = rot.data[4];
+				 m_cmd_data.cmd.cartPos[6] = rot.data[5];
+				 m_cmd_data.cmd.cartPos[8] = rot.data[6];
+				 m_cmd_data.cmd.cartPos[9] = rot.data[7];
+				 m_cmd_data.cmd.cartPos[10] = rot.data[8];
+
+				 m_cmd_data.cmd.cartPos[3] = m_cartPos.position.x;
+				 m_cmd_data.cmd.cartPos[7] = m_cartPos.position.y;
+				 m_cmd_data.cmd.cartPos[11] = m_cartPos.position.z;
+				 }
+				 } else if (m_control_mode == 5) {
+				 m_cmd_data.cmd.cmdFlags = FRI_CMD_TCPFT;
+				 if (NewData == m_addTcpWrenchPort.read(m_cartWrench)) {
+				 m_cmd_data.cmd.addTcpFT[0] = m_cartWrench.force.x;
+				 m_cmd_data.cmd.addTcpFT[1] = m_cartWrench.force.y;
+				 m_cmd_data.cmd.addTcpFT[2] = m_cartWrench.force.z;
+				 m_cmd_data.cmd.addTcpFT[3] = m_cartWrench.torque.z;
+				 m_cmd_data.cmd.addTcpFT[4] = m_cartWrench.torque.y;
+				 m_cmd_data.cmd.addTcpFT[5] = m_cartWrench.torque.x;
+				 }
+				 } else if (m_control_mode == 6) {
+				 m_cmd_data.cmd.cmdFlags = FRI_CMD_CARTPOS;
+				 if (NewData == m_cartTwistPort.read(m_cartTwist)) {
+				 KDL::Twist t;
+				 tf::TwistMsgToKDL (m_cartTwist, t);
+				 KDL::Frame T_old;
+				 T_old.M = KDL::Rotation(m_cmd_data.cmd.cartPos[0],
+				 m_cmd_data.cmd.cartPos[1],
+				 m_cmd_data.cmd.cartPos[2],
+				 m_cmd_data.cmd.cartPos[4],
+				 m_cmd_data.cmd.cartPos[5],
+				 m_cmd_data.cmd.cartPos[6],
+				 m_cmd_data.cmd.cartPos[8],
+				 m_cmd_data.cmd.cartPos[9],
+				 m_cmd_data.cmd.cartPos[10]);
+				 T_old.p.x(m_cmd_data.cmd.cartPos[3]);
+				 T_old.p.y(m_cmd_data.cmd.cartPos[7]);
+				 T_old.p.z(m_cmd_data.cmd.cartPos[11]);
+
+				 KDL::Frame T_new = addDelta (T_old, t, m_msr_data.intf.desiredCmdSampleTime);
+
+				 m_cmd_data.cmd.cartPos[0] = T_new.M.data[0];
+				 m_cmd_data.cmd.cartPos[1] = T_new.M.data[1];
+				 m_cmd_data.cmd.cartPos[2] = T_new.M.data[2];
+				 m_cmd_data.cmd.cartPos[4] = T_new.M.data[3];
+				 m_cmd_data.cmd.cartPos[5] = T_new.M.data[4];
+				 m_cmd_data.cmd.cartPos[6] = T_new.M.data[5];
+				 m_cmd_data.cmd.cartPos[8] = T_new.M.data[6];
+				 m_cmd_data.cmd.cartPos[9] = T_new.M.data[7];
+				 m_cmd_data.cmd.cartPos[10] = T_new.M.data[8];
+				 m_cmd_data.cmd.cartPos[3] = T_new.p.x();
+				 m_cmd_data.cmd.cartPos[7] = T_new.p.y();
+				 m_cmd_data.cmd.cartPos[11] = T_new.p.z();
+				 }
+				 */
+			} else if (m_msr_data.robot.control == FRI_CTRL_OTHER) {
+				this->error();
+			}
+		}
 	}
-      } else if (m_control_mode == 5) {
-	m_cmd_data.cmd.cmdFlags = FRI_CMD_TCPFT;
-	if (NewData == m_addTcpWrenchPort.read(m_cartWrench)) {
-	  m_cmd_data.cmd.addTcpFT[0] = m_cartWrench.force.x;
-	  m_cmd_data.cmd.addTcpFT[1] = m_cartWrench.force.y;
-	  m_cmd_data.cmd.addTcpFT[2] = m_cartWrench.force.z;
-	  m_cmd_data.cmd.addTcpFT[3] = m_cartWrench.torque.z;
-	  m_cmd_data.cmd.addTcpFT[4] = m_cartWrench.torque.y;
-	  m_cmd_data.cmd.addTcpFT[5] = m_cartWrench.torque.x;
 	}
-      } else if (m_control_mode == 6) {
-	m_cmd_data.cmd.cmdFlags = FRI_CMD_CARTPOS;
-	if (NewData == m_cartTwistPort.read(m_cartTwist)) {
-	  KDL::Twist t;
-	  tf::TwistMsgToKDL (m_cartTwist, t);
-	  KDL::Frame T_old;
-	  T_old.M = KDL::Rotation(m_cmd_data.cmd.cartPos[0],
-				  m_cmd_data.cmd.cartPos[1],
-				  m_cmd_data.cmd.cartPos[2],
-				  m_cmd_data.cmd.cartPos[4],
-				  m_cmd_data.cmd.cartPos[5],
-				  m_cmd_data.cmd.cartPos[6],
-				  m_cmd_data.cmd.cartPos[8],
-				  m_cmd_data.cmd.cartPos[9],
-				  m_cmd_data.cmd.cartPos[10]);
-	  T_old.p.x(m_cmd_data.cmd.cartPos[3]);
-	  T_old.p.y(m_cmd_data.cmd.cartPos[7]);
-	  T_old.p.z(m_cmd_data.cmd.cartPos[11]);
-	  
-	  KDL::Frame T_new = addDelta (T_old, t, m_msr_data.intf.desiredCmdSampleTime);
-	  
-	  m_cmd_data.cmd.cartPos[0] = T_new.M.data[0];
-	  m_cmd_data.cmd.cartPos[1] = T_new.M.data[1];
-	  m_cmd_data.cmd.cartPos[2] = T_new.M.data[2];
-	  m_cmd_data.cmd.cartPos[4] = T_new.M.data[3];
-	  m_cmd_data.cmd.cartPos[5] = T_new.M.data[4];
-	  m_cmd_data.cmd.cartPos[6] = T_new.M.data[5];
-	  m_cmd_data.cmd.cartPos[8] = T_new.M.data[6];
-	  m_cmd_data.cmd.cartPos[9] = T_new.M.data[7];
-	  m_cmd_data.cmd.cartPos[10] = T_new.M.data[8];
-	  m_cmd_data.cmd.cartPos[3] = T_new.p.x();
-	  m_cmd_data.cmd.cartPos[7] = T_new.p.y();
-	  m_cmd_data.cmd.cartPos[11] = T_new.p.z();
 	}
 	*/
       }

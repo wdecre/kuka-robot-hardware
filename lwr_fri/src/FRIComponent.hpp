@@ -32,19 +32,9 @@
 #include <kdl/jntarray.hpp>
 #include <kdl/jacobian.hpp>
 
-#include <sensor_msgs/JointState.h>
-#include <lwr_fri/FriJointCommand.h>
-#include <lwr_fri/FriJointImpedance.h>
-#include <lwr_fri/FriJointState.h>
-
-#include <geometry_msgs/Pose.h>
-#include <geometry_msgs/Twist.h>
-#include <geometry_msgs/Wrench.h>
-
-#include <sensor_msgs/typekit/JointState_Types.hpp>
-#include <geometry_msgs/typekit/Pose_Types.hpp>
-#include <geometry_msgs/typekit/Twist_Types.hpp>
-#include <geometry_msgs/typekit/Wrench_Types.hpp>
+#include <lwr_fri/typekit/Types.hpp>
+#include <sensor_msgs/typekit/Types.hpp>
+#include <geometry_msgs/typekit/Types.hpp>
 
 #include <kuka_lwr_fri/friComm.h>
 
@@ -99,28 +89,35 @@ private:
 	/**
 	 * Current robot data
 	 */
-        OutputPort<sensor_msgs::JointState > port_joint_state;
-        OutputPort<lwr_fri::FriJointState> port_fri_joint_state;
-        
-        //OutputPort<geometry_msgs::Pose>  m_msrCartPosPort;
+	OutputPort<sensor_msgs::JointState> port_joint_state;
+	OutputPort<lwr_fri::FriJointState> port_fri_joint_state;
+
+	//OutputPort<geometry_msgs::Pose>  m_msrCartPosPort;
 	//OutputPort<geometry_msgs::Pose>  m_cmdCartPosPort;
 	//OutputPort<geometry_msgs::Pose>  m_cmdCartPosFriOffsetPort;
-        //OutputPort<geometry_msgs::Wrench> m_estExtTcpWrenchPort;
+	//OutputPort<geometry_msgs::Wrench> m_estExtTcpWrenchPort;
 	//RTT::OutputPort<KDL::Jacobian> jacobianPort;
 	//RTT::OutputPort<Eigen::MatrixXd > massMatrixPort;
 
-        lwr_fri::FriJointCommand m_fri_joint_command;
-        lwr_fri::FriJointImpedance m_fri_joint_impedance;
-        InputPort<lwr_fri::FriJointCommand> port_fri_joint_command;
-        InputPort<lwr_fri::FriJointImpedance> port_fri_joint_impedance;
+	lwr_fri::FriJointCommand m_fri_joint_command;
+	lwr_fri::JointPosCommand m_joint_pos_command;
+	lwr_fri::JointVelCommand m_joint_vel_command;
+	lwr_fri::JointEffortCommand m_joint_effort_command;
+	lwr_fri::FriJointImpedance m_fri_joint_impedance;
+	InputPort<lwr_fri::FriJointCommand> port_fri_joint_command;
+	InputPort<lwr_fri::JointPosCommand> port_joint_pos_command;
+	InputPort<lwr_fri::JointVelCommand> port_joint_vel_command;
+	InputPort<lwr_fri::JointEffortCommand> port_joint_effort_command;
 
-        //InputPort<geometry_msgs::Pose> m_cartPosPort;
-        //InputPort<geometry_msgs::Twist> m_cartTwistPort;
-        //InputPort<geometry_msgs::Wrench> m_addTcpWrenchPort;
-        //InputPort<CartesianImpedance> m_cartImpedancePort;
+	InputPort<lwr_fri::FriJointImpedance> port_fri_joint_impedance;
 
-        int prop_local_port,m_socket,m_remote_port, m_control_mode;
-        std::string joint_names_prefix;
+	//InputPort<geometry_msgs::Pose> m_cartPosPort;
+	//InputPort<geometry_msgs::Twist> m_cartTwistPort;
+	//InputPort<geometry_msgs::Wrench> m_addTcpWrenchPort;
+	//InputPort<CartesianImpedance> m_cartImpedancePort;
+
+	int prop_local_port, m_socket, m_remote_port, m_control_mode;
+	std::string joint_names_prefix;
 	uint16_t counter, fri_state_last;
 	struct sockaddr_in m_remote_addr;
 	socklen_t m_sock_addr_len;
@@ -130,8 +127,3 @@ private:
 
 #endif//_FRI_COMPONENT_HPP_
 
-
-    
-
-
-    
