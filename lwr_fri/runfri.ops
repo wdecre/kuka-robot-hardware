@@ -1,0 +1,7 @@
+import("lwr_fri")
+displayComponentTypes 
+loadComponent("lwr","lwr_fri::FRIComponent")
+setActivity("lwr",0, 1, ORO_SCHED_RT)
+lwr.udp_port=49939
+lwr.configure
+lwr.start
