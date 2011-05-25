@@ -58,8 +58,11 @@ FRIComponent::FRIComponent(const string& name) :
 	 this->addPort("estExtTcpWrench", m_estExtTcpWrenchPort);
 	 */
 
-	this->addPort("FriJointCommand", port_fri_joint_command);
+	//this->addPort("FriJointCommand", port_fri_joint_command);
 	this->addPort("FriJointImpedance", port_fri_joint_impedance);
+	this->addPort("JointPositionCommand", port_joint_pos_command);
+	this->addPort("JointVelocityCommand", port_joint_vel_command);
+	this->addPort("JointEffortCommand", port_joint_effort_command);
 
 	/*
 	 this->addPort("desCartPos", m_cartPosPort);
@@ -222,12 +225,18 @@ void FRIComponent::updateHook() {
 			if (m_msr_data.robot.control == FRI_CTRL_POSITION
 					|| m_msr_data.robot.control == FRI_CTRL_JNT_IMP) {
 				m_cmd_data.cmd.cmdFlags = FRI_CMD_JNTPOS;
-				for (unsigned int i = 0; i < LBR_MNJ; i++)
-					m_cmd_data.cmd.jntPos[i] = m_msr_data.data.cmdJntPos[i];
+				m_cmd_data.cmd.cmdFlags |= FRI_CMD_JNTTRQ;
+				m_cmd_data.cmd.cmdFlags |= FRI_CMD_JNTSTIFF | FRI_CMD_JNTDAMP;
+				for (unsigned int i = 0; i < LBR_MNJ; i++) {
+					m_cmd_data.cmd.jntPos[i] = m_msr_data.data.msrJntPos[i];
+					m_cmd_data.cmd.addJntTrq[i] = 0.0;
+					m_cmd_data.cmd.jntStiffness[i] = 250; // todo read these from fri_to_rea[]
+					m_cmd_data.cmd.jntDamping[i]   = 0.7;
+				}
 			} else if (m_msr_data.robot.control == FRI_CTRL_CART_IMP) {
 				m_cmd_data.cmd.cmdFlags = FRI_CMD_CARTPOS;
 				for (unsigned int i = 0; i > FRI_CART_FRM_DIM; i++)
-					m_cmd_data.cmd.cartPos[i] = m_msr_data.data.cmdCartPos[i];
+					m_cmd_data.cmd.cartPos[i] = m_msr_data.data.msrCartPos[i];
 			} else {
 				log(Warning) << "Unknown control mode." << endlog();
 			}
@@ -240,7 +249,6 @@ void FRIComponent::updateHook() {
 				//Read desired positions
 				if (port_joint_pos_command.read(m_joint_pos_command) == NewData) {
 					if (m_joint_pos_command.positions.size() == LBR_MNJ) {
-						m_cmd_data.cmd.cmdFlags |= FRI_CMD_JNTPOS;
 						for (unsigned int i = 0; i < LBR_MNJ; i++)
 							m_cmd_data.cmd.jntPos[i]
 									= m_joint_pos_command.positions[i];
@@ -253,7 +261,6 @@ void FRIComponent::updateHook() {
 				//Read desired velocities
 				if (port_joint_vel_command.read(m_joint_vel_command) == NewData) {
 					if (m_joint_vel_command.velocities.size() == LBR_MNJ) {
-						m_cmd_data.cmd.cmdFlags |= FRI_CMD_JNTPOS;
 						for (unsigned int i = 0; i < LBR_MNJ; i++)
 							m_cmd_data.cmd.jntPos[i]
 									+= m_joint_vel_command.velocities[i]
@@ -271,7 +278,6 @@ void FRIComponent::updateHook() {
 						== NewData) {
 					//Check size
 					if (m_joint_effort_command.efforts.size() == LBR_MNJ) {
-						m_cmd_data.cmd.cmdFlags |= FRI_CMD_JNTTRQ;
 						for (unsigned int i = 0; i < LBR_MNJ; i++)
 							m_cmd_data.cmd.addJntTrq[i]
 									= m_joint_effort_command.efforts[i];
@@ -284,8 +290,6 @@ void FRIComponent::updateHook() {
 				//Read desired joint impedance
 				if (port_fri_joint_impedance.read(m_fri_joint_impedance)
 						== NewData) {
-					m_cmd_data.cmd.cmdFlags |= FRI_CMD_JNTSTIFF
-							| FRI_CMD_JNTDAMP;
 					for (unsigned int i = 0; i < LBR_MNJ; i++) {
 						m_cmd_data.cmd.jntStiffness[i]
 								= m_fri_joint_impedance.stiffness[i];
@@ -403,7 +407,7 @@ int FRIComponent::fri_recv() {
 	int n = recvfrom(m_socket, (void*) &m_msr_data, sizeof(m_msr_data), 0,
 			(sockaddr*) &m_remote_addr, &m_sock_addr_len);
 	if (sizeof(tFriMsrData) != n) {
-		log(Error) << "bad packet lenght: " << n << ", expected: "
+		log(Error) << "bad packet length: " << n << ", expected: "
 				<< sizeof(tFriMsrData) << endlog();
 		return -1;
 	}

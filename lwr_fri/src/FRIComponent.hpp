@@ -37,6 +37,7 @@
 #include <geometry_msgs/typekit/Types.hpp>
 
 #include <kuka_lwr_fri/friComm.h>
+#include <kuka_lwr_fri/typekit/Types.hpp>
 
 namespace lwr_fri {
 
