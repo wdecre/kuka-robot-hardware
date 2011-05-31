@@ -222,14 +222,22 @@ void FRIComponent::updateHook() {
 		m_cmd_data.head.sendSeqCount = ++counter;
 		m_cmd_data.head.reflSeqCount = m_msr_data.head.sendSeqCount;
 
-		///TODO: How are we choosing this? -> only change in monitor mode
+
+		if (!isPowerOn()) {
+			// necessary to write cmd if not powered on. See kuka FRI user manual p6 and friremote.cpp:
+			for (int i = 0; i < LBR_MNJ; i++)
+			{
+				m_cmd_data.cmd.jntPos[i]=m_msr_data.data.cmdJntPos[i]+m_msr_data.data.cmdJntPosFriOffset[i];
+			}
+		}
 		if (m_msr_data.intf.state == FRI_STATE_MON || !isPowerOn()) {
 			// joint position control capable modes:
 			if (m_msr_data.robot.control == FRI_CTRL_POSITION
 					|| m_msr_data.robot.control == FRI_CTRL_JNT_IMP) {
 				m_cmd_data.cmd.cmdFlags = FRI_CMD_JNTPOS;
 				for (unsigned int i = 0; i < LBR_MNJ; i++) {
-					m_cmd_data.cmd.jntPos[i] = m_msr_data.data.msrJntPos[i]; //+m_msr_data.data.cmdJntPosFriOffset[i]; // from friRemote.cpp example
+					// see note above with !isPowerOn()
+					m_cmd_data.cmd.jntPos[i] = m_msr_data.data.cmdJntPos[i]+m_msr_data.data.cmdJntPosFriOffset[i];
 				}
 			}
 			// Additional flags are set in joint impedance mode:
