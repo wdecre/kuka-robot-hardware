@@ -61,17 +61,18 @@ private:
 	int fri_recv();
 	int fri_send();
 
+	bool isPowerOn() { return m_msr_data.robot.power!=0; }
+
 	tFriMsrData m_msr_data;
 	tFriCmdData m_cmd_data;
 
 	sensor_msgs::JointState m_joint_states;
 	lwr_fri::FriJointState m_fri_joint_state;
 
-	/*
-	 geometry_msgs::Pose m_cartPos;
-	 geometry_msgs::Twist m_cartTwist;
-	 geometry_msgs::Wrench m_cartWrench;
-	 */
+	geometry_msgs::Pose m_cartPos;
+	geometry_msgs::Twist m_cartTwist;
+	geometry_msgs::Wrench m_cartWrench;
+
 	OutputPort<tFriKrlData> port_from_krl;
 	OutputPort<tFriKrlData> port_to_krl;
 	//Eigen::Matrix<double,7,7> m_massTmp; Not correct so useless
@@ -93,10 +94,10 @@ private:
 	OutputPort<sensor_msgs::JointState> port_joint_state;
 	OutputPort<lwr_fri::FriJointState> port_fri_joint_state;
 
-	//OutputPort<geometry_msgs::Pose>  m_msrCartPosPort;
+	OutputPort<geometry_msgs::Pose>  port_cart_pos_msr;
 	//OutputPort<geometry_msgs::Pose>  m_cmdCartPosPort;
 	//OutputPort<geometry_msgs::Pose>  m_cmdCartPosFriOffsetPort;
-	//OutputPort<geometry_msgs::Wrench> m_estExtTcpWrenchPort;
+	OutputPort<geometry_msgs::Wrench> port_cart_wrench_msr;
 	//RTT::OutputPort<KDL::Jacobian> jacobianPort;
 	//RTT::OutputPort<Eigen::MatrixXd > massMatrixPort;
 
@@ -112,10 +113,10 @@ private:
 
 	InputPort<lwr_fri::FriJointImpedance> port_fri_joint_impedance;
 
-	//InputPort<geometry_msgs::Pose> m_cartPosPort;
-	//InputPort<geometry_msgs::Twist> m_cartTwistPort;
-	//InputPort<geometry_msgs::Wrench> m_addTcpWrenchPort;
-	//InputPort<CartesianImpedance> m_cartImpedancePort;
+	InputPort<geometry_msgs::Pose> port_cart_pos_command;
+	InputPort<geometry_msgs::Twist> port_cart_vel_command;
+	InputPort<geometry_msgs::Wrench> port_cart_wrench_command;
+	//InputPort<CartesianImpedance> port_cart_;
 
 	int prop_local_port, m_socket, m_remote_port, m_control_mode;
 	std::string joint_names_prefix;
