@@ -237,6 +237,9 @@ void FRIComponent::updateHook() {
 				m_cmd_data.cmd.cmdFlags = FRI_CMD_JNTPOS;
 				for (unsigned int i = 0; i < LBR_MNJ; i++) {
 					// see note above with !isPowerOn()
+					// the user manual speaks of 'mimick msr.data.msrCmdJntPos' which is ambiguous.
+					// on the other hand, the friremote.cpp will send this whenever (!isPowerOn() || state != FRI_STATE_CMD)
+					// so we mimich the kuka reference code here...
 					m_cmd_data.cmd.jntPos[i] = m_msr_data.data.cmdJntPos[i]+m_msr_data.data.cmdJntPosFriOffset[i];
 				}
 			}
