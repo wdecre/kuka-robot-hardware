@@ -63,7 +63,7 @@ FRIComponent::FRIComponent(const string& name) :
 	this->addPort("CartesianPositionCommand", port_cart_pos_command);
 	this->addPort("CartesianVelocityCommand", port_cart_vel_command);
 	this->addPort("CartesianWrenchCommand", port_cart_wrench_command);
-//	this->addPort("CartesianCommand", m_cartImpedancePort);
+	this->addPort("CartesianImpedanceCommand", port_cart_impedance_command);
 
 
 	this->addProperty("udp_port", prop_local_port);
@@ -254,11 +254,13 @@ void FRIComponent::updateHook() {
 				}
 			}
 			if (m_msr_data.robot.control == FRI_CTRL_CART_IMP) {
-				m_cmd_data.cmd.cmdFlags = FRI_CMD_CARTPOS;
+				m_cmd_data.cmd.cmdFlags = FRI_CMD_CARTPOS | FRI_CMD_TCPFT;
 				m_cmd_data.cmd.cmdFlags |= FRI_CMD_CARTSTIFF | FRI_CMD_CARTDAMP;
 				for (unsigned int i = 0; i < FRI_CART_FRM_DIM; i++)
 					m_cmd_data.cmd.cartPos[i] = m_msr_data.data.msrCartPos[i];
-				for(unsigned int i=0; i< FRI_CART_VEC/2 ; i++)
+				for(unsigned int i = 0 ; i < FRI_CART_VEC ; i++)
+					m_cmd_data.cmd.addTcpFT[i]=0.0;
+				for(unsigned int i=0; i < FRI_CART_VEC/2 ; i++)
 				{
 					//Linear part;
 					m_cmd_data.cmd.cartStiffness[i]=100;
@@ -345,17 +347,16 @@ void FRIComponent::updateHook() {
 					m_cmd_data.cmd.cartPos[7] = m_cartPos.position.y;
 					m_cmd_data.cmd.cartPos[11] = m_cartPos.position.z;
 				}
-				/*
-				 } else if (m_control_mode == 5) {
-				 m_cmd_data.cmd.cmdFlags = FRI_CMD_TCPFT;
-				 if (NewData == m_addTcpWrenchPort.read(m_cartWrench)) {
-				 m_cmd_data.cmd.addTcpFT[0] = m_cartWrench.force.x;
-				 m_cmd_data.cmd.addTcpFT[1] = m_cartWrench.force.y;
-				 m_cmd_data.cmd.addTcpFT[2] = m_cartWrench.force.z;
-				 m_cmd_data.cmd.addTcpFT[3] = m_cartWrench.torque.z;
-				 m_cmd_data.cmd.addTcpFT[4] = m_cartWrench.torque.y;
-				 m_cmd_data.cmd.addTcpFT[5] = m_cartWrench.torque.x;
-				 }*/
+
+				if (NewData == port_cart_wrench_command.read(m_cartWrench)) {
+					m_cmd_data.cmd.addTcpFT[0] = m_cartWrench.force.x;
+					m_cmd_data.cmd.addTcpFT[1] = m_cartWrench.force.y;
+					m_cmd_data.cmd.addTcpFT[2] = m_cartWrench.force.z;
+					m_cmd_data.cmd.addTcpFT[3] = m_cartWrench.torque.z;
+					m_cmd_data.cmd.addTcpFT[4] = m_cartWrench.torque.y;
+					m_cmd_data.cmd.addTcpFT[5] = m_cartWrench.torque.x;
+				}
+
 				if (NewData == port_cart_vel_command.read(m_cartTwist)) {
 					KDL::Twist t;
 					tf::TwistMsgToKDL (m_cartTwist, t);
