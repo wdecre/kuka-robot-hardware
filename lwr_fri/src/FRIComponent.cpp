@@ -255,8 +255,18 @@ void FRIComponent::updateHook() {
 			}
 			if (m_msr_data.robot.control == FRI_CTRL_CART_IMP) {
 				m_cmd_data.cmd.cmdFlags = FRI_CMD_CARTPOS;
+				m_cmd_data.cmd.cmdFlags |= FRI_CMD_CARTSTIFF | FRI_CMD_CARTDAMP;
 				for (unsigned int i = 0; i < FRI_CART_FRM_DIM; i++)
 					m_cmd_data.cmd.cartPos[i] = m_msr_data.data.msrCartPos[i];
+				for(unsigned int i=0; i< FRI_CART_VEC/2 ; i++)
+				{
+					//Linear part;
+					m_cmd_data.cmd.cartStiffness[i]=100;
+					m_cmd_data.cmd.cartDamping[i]=0.1;
+					//rotational part;
+					m_cmd_data.cmd.cartStiffness[i+FRI_CART_VEC/2]=10;
+					m_cmd_data.cmd.cartDamping[i+FRI_CART_VEC/2]=0.1;
+				}
 			}
 		}
 		//Only send if state is in FRI_STATE_CMD and drives are powerd
@@ -347,7 +357,6 @@ void FRIComponent::updateHook() {
 				 m_cmd_data.cmd.addTcpFT[5] = m_cartWrench.torque.x;
 				 }*/
 				if (NewData == port_cart_vel_command.read(m_cartTwist)) {
-					//cout << "new velocity data" <<endl;
 					KDL::Twist t;
 					tf::TwistMsgToKDL (m_cartTwist, t);
 					KDL::Frame T_old;
@@ -378,6 +387,20 @@ void FRIComponent::updateHook() {
 					m_cmd_data.cmd.cartPos[3] = T_new.p.x();
 					m_cmd_data.cmd.cartPos[7] = T_new.p.y();
 					m_cmd_data.cmd.cartPos[11] = T_new.p.z();
+				}
+				if (NewData == port_cart_impedance_command.read(m_cartImp)){
+					m_cmd_data.cmd.cartStiffness[0]=m_cartImp.stiffness.linear.x;
+					m_cmd_data.cmd.cartStiffness[1]=m_cartImp.stiffness.linear.y;
+					m_cmd_data.cmd.cartStiffness[2]=m_cartImp.stiffness.linear.z;
+					m_cmd_data.cmd.cartStiffness[5]=m_cartImp.stiffness.angular.x;
+					m_cmd_data.cmd.cartStiffness[4]=m_cartImp.stiffness.angular.y;
+					m_cmd_data.cmd.cartStiffness[3]=m_cartImp.stiffness.angular.z;
+					m_cmd_data.cmd.cartDamping[0]=m_cartImp.damping.linear.x;
+					m_cmd_data.cmd.cartDamping[1]=m_cartImp.damping.linear.y;
+					m_cmd_data.cmd.cartDamping[2]=m_cartImp.damping.linear.z;
+					m_cmd_data.cmd.cartDamping[5]=m_cartImp.damping.angular.x;
+					m_cmd_data.cmd.cartDamping[4]=m_cartImp.damping.angular.y;
+					m_cmd_data.cmd.cartDamping[3]=m_cartImp.damping.angular.z;
 				}
 			} else if (m_msr_data.robot.control == FRI_CTRL_OTHER) {
 				this->error();

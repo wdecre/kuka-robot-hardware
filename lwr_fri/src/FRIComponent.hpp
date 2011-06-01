@@ -73,6 +73,8 @@ private:
 	geometry_msgs::Twist m_cartTwist;
 	geometry_msgs::Wrench m_cartWrench;
 
+	lwr_fri::CartesianImpedance m_cartImp;
+
 	OutputPort<tFriKrlData> port_from_krl;
 	OutputPort<tFriKrlData> port_to_krl;
 	//Eigen::Matrix<double,7,7> m_massTmp; Not correct so useless
@@ -116,7 +118,7 @@ private:
 	InputPort<geometry_msgs::Pose> port_cart_pos_command;
 	InputPort<geometry_msgs::Twist> port_cart_vel_command;
 	InputPort<geometry_msgs::Wrench> port_cart_wrench_command;
-	//InputPort<CartesianImpedance> port_cart_;
+	InputPort<lwr_fri::CartesianImpedance> port_cart_impedance_command;
 
 	int prop_local_port, m_socket, m_remote_port, m_control_mode;
 	std::string joint_names_prefix;
