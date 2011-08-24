@@ -35,7 +35,7 @@ endif()
 # documentation.
 include(${OROCOS-RTT_USE_FILE_PATH}/UseOROCOS-RTT.cmake)
 
-orocos_typegen_headers(--notransports=corba,typelib friComm.h)
+orocos_typegen_headers(--notransports=corba,typelib,mqueue friComm.h)
 
 #
 # Provided 'uninstall' target
