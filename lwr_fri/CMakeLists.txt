@@ -56,4 +56,4 @@ else()
   orocos_component(lwr_fri src/FRIComponent.cpp) # ...you may add multiple source files
 endif()
 target_link_libraries(lwr_fri rtt-ros-lwr_fri-typekit)
-
+orocos_typekit(lwr_fri_typekit lwr_fri-typekit.cpp)
