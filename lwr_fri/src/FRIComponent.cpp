@@ -409,8 +409,8 @@ void FRIComponent::updateHook() {
 		}//End command mode
 
 		//m_cmd_data.krl = m_toKRL;
-		if (fri_send() != 0)
-			this->error();
+		fri_send();
+		  //this->error();
 	}//End fri_recv succesfull
 	this->trigger();
 }
