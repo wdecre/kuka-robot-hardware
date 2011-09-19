@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
+#include <rtt/os/TimeService.hpp>
 
 namespace lwr_fri {
 
@@ -64,6 +65,8 @@ FRIComponent::FRIComponent(const string& name) :
 	this->addPort("CartesianVelocityCommand", port_cart_vel_command);
 	this->addPort("CartesianWrenchCommand", port_cart_wrench_command);
 	this->addPort("CartesianImpedanceCommand", port_cart_impedance_command);
+
+	this->addPort("Jacobian", jacobianPort);
 
 
 	this->addProperty("udp_port", prop_local_port);
@@ -144,6 +147,14 @@ void FRIComponent::updateHook() {
 		}
 		fri_state_last = m_msr_data.intf.state;
 
+		KDL::Jacobian jac(LBR_MNJ);
+		for ( int i = 0; i < FRI_CART_VEC; i++)
+		    for ( int j = 0; j < LBR_MNJ; j++)
+				jac(i,j) = m_msr_data.data.jacobian[i*LBR_MNJ+j];
+		//Kuka uses Tx, Ty, Tz, Rz, Ry, Rx convention, so we need to swap Rz and Rx
+		jac.data.row(3).swap(jac.data.row(5));
+		jacobianPort.write(jac);
+
 		//Put robot and fri state on the ports(no parsing)
 		port_robot_state.write(m_msr_data.robot);
 		port_fri_state.write(m_msr_data.intf);
@@ -164,6 +175,8 @@ void FRIComponent::updateHook() {
 				m_msr_data.data.msrJntPos + LBR_MNJ);
 		m_joint_states.effort.assign(m_msr_data.data.estExtJntTrq,
 				m_msr_data.data.estExtJntTrq + LBR_MNJ);
+
+		m_joint_states.header.stamp.fromNSec ( RTT::os::TimeService::Instance()->getNSecs() );
 
 		port_fri_joint_state.write(m_fri_joint_state);
 		port_joint_state.write(m_joint_states);

@@ -35,6 +35,7 @@
 #include <lwr_fri/typekit/Types.hpp>
 #include <sensor_msgs/typekit/Types.hpp>
 #include <geometry_msgs/typekit/Types.hpp>
+#include <motion_control_msgs/typekit/Types.hpp>
 
 #include <kuka_lwr_fri/friComm.h>
 #include <kuka_lwr_fri/typekit/Types.hpp>
@@ -100,18 +101,18 @@ private:
 	//OutputPort<geometry_msgs::Pose>  m_cmdCartPosPort;
 	//OutputPort<geometry_msgs::Pose>  m_cmdCartPosFriOffsetPort;
 	OutputPort<geometry_msgs::Wrench> port_cart_wrench_msr;
-	//RTT::OutputPort<KDL::Jacobian> jacobianPort;
+	RTT::OutputPort<KDL::Jacobian> jacobianPort;
 	//RTT::OutputPort<Eigen::MatrixXd > massMatrixPort;
 
 	lwr_fri::FriJointCommand m_fri_joint_command;
-	lwr_fri::JointPosCommand m_joint_pos_command;
-	lwr_fri::JointVelCommand m_joint_vel_command;
-	lwr_fri::JointEffortCommand m_joint_effort_command;
+	motion_control_msgs::JointPositions m_joint_pos_command;
+	motion_control_msgs::JointVelocities m_joint_vel_command;
+	motion_control_msgs::JointEfforts m_joint_effort_command;
 	lwr_fri::FriJointImpedance m_fri_joint_impedance;
 	InputPort<lwr_fri::FriJointCommand> port_fri_joint_command;
-	InputPort<lwr_fri::JointPosCommand> port_joint_pos_command;
-	InputPort<lwr_fri::JointVelCommand> port_joint_vel_command;
-	InputPort<lwr_fri::JointEffortCommand> port_joint_effort_command;
+	InputPort<motion_control_msgs::JointPositions> port_joint_pos_command;
+	InputPort<motion_control_msgs::JointVelocities> port_joint_vel_command;
+	InputPort<motion_control_msgs::JointEfforts> port_joint_effort_command;
 
 	InputPort<lwr_fri::FriJointImpedance> port_fri_joint_impedance;
 
