@@ -11,10 +11,12 @@
 
   <depend package="rtt"/>
   <depend package="orocos_kdl"/>
-  <depend package="rtt_ros_integration_geometry_msgs"/>
-  <depend package="rtt_ros_integration_sensor_msgs"/>
+  <depend package="rtt_geometry_msgs"/>
+  <depend package="rtt_sensor_msgs"/>
   <depend package="tf_conversions"/>
   <depend package="kuka_lwr_fri"/>
+  <depend package="rtt_motion_control_msgs"/>
+
 </package>
 
 
