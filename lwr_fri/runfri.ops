@@ -1,6 +1,6 @@
 import("lwr_fri")
 loadComponent("lwr","lwr_fri::FRIComponent")
-setActivity("lwr",0, 1, ORO_SCHED_RT)
-lwr.udp_port=49939
+setActivity("lwr",0, 99, ORO_SCHED_RT)
+lwr.udp_port=49938
 lwr.configure
 lwr.start
