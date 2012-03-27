@@ -187,7 +187,8 @@ void FRIComponent::updateHook() {
 				m_msr_data.data.estExtJntTrq + LBR_MNJ);
 
 		m_joint_states.header.stamp.fromNSec ( RTT::os::TimeService::Instance()->getNSecs() );
-
+		//m_joint_states.header.stamp.fromSec( m_msr_data.intf.timestamp ); --> only accurate to 1/10th of a second !!!
+		m_fri_joint_state.header.stamp=m_joint_states.header.stamp;
 		port_fri_joint_state.write(m_fri_joint_state);
 		port_joint_state.write(m_joint_states);
 
