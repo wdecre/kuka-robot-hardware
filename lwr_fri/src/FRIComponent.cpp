@@ -115,6 +115,7 @@ bool FRIComponent::configureHook() {
 	m_joint_states.header.frame_id = "dummy_frame_id";
 	m_fri_joint_state.header.frame_id = "dummy_frame_id";
 
+	jacobianPort.setDataSample(m_jac);
 
 	for (unsigned int i = 0; i < LBR_MNJ; i++) {
 		ostringstream ss;
@@ -156,13 +157,12 @@ void FRIComponent::updateHook() {
 		}
 		fri_state_last = m_msr_data.intf.state;
 
-		KDL::Jacobian jac(LBR_MNJ);
 		for ( int i = 0; i < FRI_CART_VEC; i++)
 		    for ( int j = 0; j < LBR_MNJ; j++)
-				jac(i,j) = m_msr_data.data.jacobian[i*LBR_MNJ+j];
+				m_jac(i,j) = m_msr_data.data.jacobian[i*LBR_MNJ+j];
 		//Kuka uses Tx, Ty, Tz, Rz, Ry, Rx convention, so we need to swap Rz and Rx
-		jac.data.row(3).swap(jac.data.row(5));
-		jacobianPort.write(jac);
+		m_jac.data.row(3).swap(m_jac.data.row(5));
+		jacobianPort.write(m_jac);
 
 		//Put robot and fri state on the ports(no parsing)
 		port_robot_state.write(m_msr_data.robot);

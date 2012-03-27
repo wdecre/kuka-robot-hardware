@@ -129,7 +129,7 @@ private:
 	socklen_t m_sock_addr_len;
 
 	std::string m_mon_mode, m_cmd_mode, m_unknown_mode;
-
+	KDL::Jacobian m_jac;
 };
 
 }//Namespace LWR
