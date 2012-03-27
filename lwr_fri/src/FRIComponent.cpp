@@ -74,6 +74,8 @@ FRIComponent::FRIComponent(const string& name) :
 	/*
 	 this->addProperty("control_mode", prop_control_mode).doc("1=JntPos, 2=JntVel, 3=JntTrq, 4=CartPos, 5=CartForce, 6=CartTwist");
 	 */
+	memset(&m_msr_data, 0, sizeof(m_msr_data) );
+	memset(&m_cmd_data, 0, sizeof(m_cmd_data) );
 
 	m_mon_mode = "e_fri_mon_mode";
 	m_cmd_mode = "e_fri_cmd_mode";
