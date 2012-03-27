@@ -38,7 +38,9 @@ namespace lwr_fri {
 using namespace RTT;
 
 FRIComponent::FRIComponent(const string& name) :
-	TaskContext(name, PreOperational) {
+	TaskContext(name, PreOperational),
+	m_socket(0),m_jac(LBR_MNJ)
+{
 
 	this->addPort("fromKRL", port_from_krl);
 	this->addPort("toKRL", port_to_krl);
