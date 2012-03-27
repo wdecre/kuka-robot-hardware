@@ -98,6 +98,7 @@ private:
 	OutputPort<lwr_fri::FriJointState> port_fri_joint_state;
 
 	OutputPort<geometry_msgs::Pose>  port_cart_pos_msr;
+	OutputPort<KDL::Frame> port_cart_frame_msr;
 	//OutputPort<geometry_msgs::Pose>  m_cmdCartPosPort;
 	//OutputPort<geometry_msgs::Pose>  m_cmdCartPosFriOffsetPort;
 	OutputPort<geometry_msgs::Wrench> port_cart_wrench_msr;

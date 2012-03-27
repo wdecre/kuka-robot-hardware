@@ -54,6 +54,7 @@ FRIComponent::FRIComponent(const string& name) :
 	this->addPort("FriJointState", port_fri_joint_state);
 
 	this->addPort("CartesianPosition", port_cart_pos_msr);
+	this->addPort("CartesianPositionFrame", port_cart_frame_msr);
 	this->addPort("CartesianWrench", port_cart_wrench_msr);
 
 	this->addPort("FriJointImpedance", port_fri_joint_impedance);
@@ -192,6 +193,7 @@ void FRIComponent::updateHook() {
 		cartPos.p.y(m_msr_data.data.msrCartPos[7]);
 		cartPos.p.z(m_msr_data.data.msrCartPos[11]);
 		tf::PoseKDLToMsg(cartPos,m_cartPos);
+		port_cart_frame_msr.write(cartPos);
 		port_cart_pos_msr.write(m_cartPos);
 
 //		cartPos.M = KDL::Rotation(m_msr_data.data.cmdCartPos[0],
