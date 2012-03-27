@@ -302,7 +302,7 @@ void FRIComponent::updateHook() {
 
 				}
 				//Read desired velocities
-				if (port_joint_vel_command.read(m_joint_vel_command) == NewData) {
+				if (port_joint_vel_command.read(m_joint_vel_command) != NoData) {
 					if (m_joint_vel_command.velocities.size() == LBR_MNJ) {
 						for (unsigned int i = 0; i < LBR_MNJ; i++)
 							m_cmd_data.cmd.jntPos[i]
