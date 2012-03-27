@@ -112,6 +112,9 @@ bool FRIComponent::configureHook() {
 	m_joint_states.name.resize(LBR_MNJ);
 	m_joint_states.position.resize(LBR_MNJ);
 	m_joint_states.effort.resize(LBR_MNJ);
+	m_joint_states.header.frame_id = "dummy_frame_id";
+	m_fri_joint_state.header.frame_id = "dummy_frame_id";
+
 
 	for (unsigned int i = 0; i < LBR_MNJ; i++) {
 		ostringstream ss;
