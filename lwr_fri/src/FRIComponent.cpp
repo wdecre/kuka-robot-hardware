@@ -133,6 +133,7 @@ bool FRIComponent::configureHook() {
 
 bool FRIComponent::startHook() {
 	counter = 0;
+	m_init = true;
 	return true;
 }
 
@@ -434,7 +435,12 @@ void FRIComponent::updateHook() {
 		//m_cmd_data.krl = m_toKRL;
 		fri_send();
 		  //this->error();
+		if(m_init){
+			rtos_enable_rt_warning();
+			m_init = false;
+		}
 	}//End fri_recv succesfull
+
 	this->trigger();
 }
 
@@ -479,7 +485,8 @@ int FRIComponent::fri_recv() {
 int FRIComponent::fri_send() {
 	if (0 > sendto(m_socket, (void*) &m_cmd_data, sizeof(m_cmd_data), 0,
 			(sockaddr*) &m_remote_addr, m_sock_addr_len)) {
-		log(Error) << "Sending datagram failed." << endlog();
+		if (!m_init)
+			log(Error) << "Sending datagram failed." << endlog();
 		return -1;
 	}
 	return 0;
