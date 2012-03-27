@@ -75,6 +75,11 @@ FRIComponent::FRIComponent(const string& name) :
 	 this->addProperty("control_mode", prop_control_mode).doc("1=JntPos, 2=JntVel, 3=JntTrq, 4=CartPos, 5=CartForce, 6=CartTwist");
 	 */
 
+	m_mon_mode = "e_fri_mon_mode";
+	m_cmd_mode = "e_fri_cmd_mode";
+	m_unknown_mode = "e_fri_unkown_mode";
+
+
 }
 
 FRIComponent::~FRIComponent() {
@@ -135,16 +140,16 @@ void FRIComponent::updateHook() {
 		if (m_msr_data.intf.state == FRI_STATE_MON || !isPowerOn() ) {
 			if (fri_state_last != m_msr_data.intf.state) {
 				//cout << "Switching to monitor mode." <<endl;
-				port_events.write("e_fri_mon_mode");
+				port_events.write(m_mon_mode);
 			}
 		} else if (m_msr_data.intf.state == FRI_STATE_CMD && isPowerOn() ) {
 			if (fri_state_last != m_msr_data.intf.state) {
-				port_events.write("e_fri_cmd_mode");
+				port_events.write(m_cmd_mode);
 				//cout << "Switching to command mode." <<endl;
 			}
 		} else {
 			if (fri_state_last != m_msr_data.intf.state)
-				port_events.write("e_fri_unkown_mode");
+				port_events.write(m_unknown_mode);
 		}
 		fri_state_last = m_msr_data.intf.state;
 

@@ -127,6 +127,9 @@ private:
 	uint16_t counter, fri_state_last;
 	struct sockaddr_in m_remote_addr;
 	socklen_t m_sock_addr_len;
+
+	std::string m_mon_mode, m_cmd_mode, m_unknown_mode;
+
 };
 
 }//Namespace LWR
