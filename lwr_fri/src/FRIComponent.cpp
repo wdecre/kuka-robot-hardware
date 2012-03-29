@@ -39,7 +39,7 @@ using namespace RTT;
 
 FRIComponent::FRIComponent(const string& name) :
 	TaskContext(name, PreOperational),
-	m_socket(0),m_jac(LBR_MNJ)
+	m_socket(0),m_jac(LBR_MNJ), m_lost_sample_count(0), prop_max_lost_samples(5)
 {
 
 	this->addPort("fromKRL", port_from_krl);
@@ -73,6 +73,7 @@ FRIComponent::FRIComponent(const string& name) :
 
 
 	this->addProperty("udp_port", prop_local_port);
+	this->addProperty("max_lost_samples", prop_max_lost_samples).doc("Number of times the joint positions get updated using the last desired velocities without receiving new data on port.");
 	/*
 	 this->addProperty("control_mode", prop_control_mode).doc("1=JntPos, 2=JntVel, 3=JntTrq, 4=CartPos, 5=CartForce, 6=CartTwist");
 	 */
@@ -317,8 +318,15 @@ void FRIComponent::updateHook() {
 								<< " not equal to " << LBR_MNJ << endlog();
 
 				}
+
+				//Count lost samples
+				if (port_joint_vel_command.read(m_joint_vel_command) == NewData)
+				    m_lost_sample_count = 0;
+				else
+				    m_lost_sample_count ++;
+
 				//Read desired velocities
-				if (port_joint_vel_command.read(m_joint_vel_command) != NoData) {
+				if ( (port_joint_vel_command.read(m_joint_vel_command) != NoData) && (m_lost_sample_count < prop_max_lost_samples) ) {
 					if (m_joint_vel_command.velocities.size() == LBR_MNJ) {
 						for (unsigned int i = 0; i < LBR_MNJ; i++)
 							m_cmd_data.cmd.jntPos[i]
