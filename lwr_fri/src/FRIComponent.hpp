@@ -131,6 +131,8 @@ private:
 	std::string m_mon_mode, m_cmd_mode, m_unknown_mode;
 	bool m_init;
 	KDL::Jacobian m_jac;
+
+	int m_lost_sample_count, prop_max_lost_samples;
 };
 
 }//Namespace LWR

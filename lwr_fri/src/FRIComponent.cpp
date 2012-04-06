@@ -38,7 +38,9 @@ namespace lwr_fri {
 using namespace RTT;
 
     FRIComponent::FRIComponent(const std::string& name) :
-	TaskContext(name, PreOperational) {
+        TaskContext(name, PreOperational),
+        m_socket(0),m_jac(LBR_MNJ), m_lost_sample_count(0), prop_max_lost_samples(5)
+    {
 
 	this->addPort("fromKRL", port_from_krl);
 	this->addPort("toKRL", port_to_krl);
@@ -71,9 +73,12 @@ using namespace RTT;
 
 
 	this->addProperty("udp_port", prop_local_port);
+	this->addProperty("max_lost_samples", prop_max_lost_samples).doc("Number of times the joint positions get updated using the last desired velocities without receiving new data on port.");
 	/*
 	 this->addProperty("control_mode", prop_control_mode).doc("1=JntPos, 2=JntVel, 3=JntTrq, 4=CartPos, 5=CartForce, 6=CartTwist");
 	 */
+	memset(&m_msr_data, 0, sizeof(m_msr_data) );
+	memset(&m_cmd_data, 0, sizeof(m_cmd_data) );
 
 	m_mon_mode = "e_fri_mon_mode";
 	m_cmd_mode = "e_fri_cmd_mode";
@@ -186,7 +191,8 @@ void FRIComponent::updateHook() {
 				m_msr_data.data.estExtJntTrq + LBR_MNJ);
 
 		m_joint_states.header.stamp.fromNSec ( RTT::os::TimeService::Instance()->getNSecs() );
-
+		//m_joint_states.header.stamp.fromSec( m_msr_data.intf.timestamp ); --> only accurate to 1/10th of a second !!!
+		m_fri_joint_state.header.stamp=m_joint_states.header.stamp;
 		port_fri_joint_state.write(m_fri_joint_state);
 		port_joint_state.write(m_joint_states);
 
@@ -311,8 +317,15 @@ void FRIComponent::updateHook() {
 								<< " not equal to " << LBR_MNJ << endlog();
 
 				}
+
+				//Count lost samples
+				if (port_joint_vel_command.read(m_joint_vel_command) == NewData)
+				    m_lost_sample_count = 0;
+				else
+				    m_lost_sample_count ++;
+
 				//Read desired velocities
-				if (port_joint_vel_command.read(m_joint_vel_command) != NoData) {
+				if ( (port_joint_vel_command.read(m_joint_vel_command) != NoData) && (m_lost_sample_count < prop_max_lost_samples) ) {
 					if (m_joint_vel_command.velocities.size() == LBR_MNJ) {
 						for (unsigned int i = 0; i < LBR_MNJ; i++)
 							m_cmd_data.cmd.jntPos[i]
