@@ -77,7 +77,7 @@ private:
 	lwr_fri::CartesianImpedance m_cartImp;
 
 	OutputPort<tFriKrlData> port_from_krl;
-	OutputPort<tFriKrlData> port_to_krl;
+	InputPort<tFriKrlData> port_to_krl;
 	//Eigen::Matrix<double,7,7> m_massTmp; Not correct so useless
 
 	/**

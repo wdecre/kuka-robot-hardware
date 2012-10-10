@@ -444,7 +444,8 @@ void FRIComponent::updateHook() {
 			}
 		}//End command mode
 
-		//m_cmd_data.krl = m_toKRL;
+		port_to_krl.read(m_cmd_data.krl);
+
 		fri_send();
 		  //this->error();
 		if(m_init){
