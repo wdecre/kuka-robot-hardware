@@ -123,7 +123,7 @@ bool FRIComponent::configureHook() {
 
 	for (unsigned int i = 0; i < LBR_MNJ; i++) {
         std::ostringstream ss;
-		ss << "arm_" << i<<"_joint";
+		ss << "arm_" << i+1 <<"_joint";
 		m_joint_states.name[i] = ss.str();
 	}
 	port_joint_state.setDataSample(m_joint_states);
